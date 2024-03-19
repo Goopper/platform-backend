@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: private-template
+server:
+  port: 8888
