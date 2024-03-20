@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: platform
+  cloud:
+    loadbalancer:
+      enabled: false
+    consul:
+      config:
+        format: yaml
+      discovery:
+        service-name: ${spring.application.name}
+        instance-id: ${spring.application.name}:${random.value}
+        health-check-path: /health
+        health-check-interval: 15s
+      host: localhost
+      port: 8500
