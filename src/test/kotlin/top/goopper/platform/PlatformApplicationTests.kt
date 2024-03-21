@@ -13,9 +13,4 @@ import top.goopper.platform.entity.User
 
 @SpringBootTest
 class PlatformApplicationTests {
-
-    @Test
-    fun contextLoads() {
-    }
-
 }
