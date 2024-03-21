@@ -14,12 +14,8 @@ import top.goopper.platform.entity.User
 @SpringBootTest
 class PlatformApplicationTests {
 
-    @Autowired
-    lateinit var passwordEncoder: BCryptPasswordEncoder
-
     @Test
     fun contextLoads() {
-        passwordEncoder.encode("123456").also(::println)
     }
 
 }
