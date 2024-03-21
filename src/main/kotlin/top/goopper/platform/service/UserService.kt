@@ -20,7 +20,6 @@ class UserService(
     private val passwordEncoder: BCryptPasswordEncoder
 ) : UserDetailsService {
 
-
     /**
      * Authenticate user with number and password
      * @param number user number

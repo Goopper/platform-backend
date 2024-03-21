@@ -1,6 +1,6 @@
 spring:
   application:
-    name: platform
+    name: platform-backend
   cloud:
     loadbalancer:
       enabled: false
@@ -12,5 +12,5 @@ spring:
         instance-id: ${spring.application.name}:${random.value}
         health-check-path: /health
         health-check-interval: 15s
-      host: localhost
-      port: 8500
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
