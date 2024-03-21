@@ -30,11 +30,31 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-//    implementation("org.springframework.cloud:spring-cloud-starter-consul-config")
-//    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
     runtimeOnly("com.mysql:mysql-connector-j")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+
+    // spring-jdbc
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    // jwt-api
+    implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    // jwt-impl
+    implementation("io.jsonwebtoken:jjwt-impl:0.12.5")
+    // jwt-jackson
+    implementation("io.jsonwebtoken:jjwt-jackson:0.12.5")
+    // user-agent-utils
+    implementation("eu.bitwalker:UserAgentUtils:1.21")
+    // https://mvnrepository.com/artifact/org.ktorm/ktorm-core
+    implementation("org.ktorm:ktorm-core:3.6.0")
+    // https://mvnrepository.com/artifact/org.ktorm/ktorm-support-mysql
+    implementation("org.ktorm:ktorm-support-mysql:3.6.0")
+    // https://mvnrepository.com/artifact/org.ktorm/ktorm-jackson
+    implementation("org.ktorm:ktorm-jackson:3.6.0")
+    // spring-cloud-starter-consul
+    implementation("org.springframework.cloud:spring-cloud-starter-consul-config")
+    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
+    // bootstrap
+    implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 }
 
 dependencyManagement {
@@ -52,4 +72,13 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+    sourceSets.test {
+        kotlin.srcDir("build/generated/ksp/test/kotlin")
+    }
 }
