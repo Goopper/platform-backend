@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: platform-backend
+  cloud:
+    loadbalancer:
+      enabled: false
+    consul:
+      enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/goopper?useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
