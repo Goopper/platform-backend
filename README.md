@@ -1,4 +1,37 @@
-# 如何启动项目
+# 不使用Consul配置中心
+
+## 1. 修改配置文件
+
+修改resources目录下的`bootstrap-dev.yml`文件，内容替换为你的配置：
+```yaml
+spring:
+  application:
+    name: platform-backend
+  cloud:
+    loadbalancer:
+      enabled: false
+    # 关闭consul
+    consul:
+      enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/goopper?useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+```
+
+## 2. 启动项目
+
+使用IDEA启动 [PlatformApplication.kt](src%2Fmain%2Fkotlin%2Ftop%2Fgoopper%2Fplatform%2FPlatformApplication.kt) 。
+
+为了启用`dev`环境，需要在启动配置中添加`-Dspring.profiles.active=dev`参数，或者修改启动配置的`Active profiles`为`dev`。
+
+# 使用Consul配置中心
 
 ## 1. 启动consul
 

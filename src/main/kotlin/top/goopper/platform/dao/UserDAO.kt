@@ -2,10 +2,12 @@ package top.goopper.platform.dao
 
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.support.mysql.insertOrUpdate
 import org.springframework.stereotype.Component
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.entity.*
 import top.goopper.platform.pojo.UserFullDetails
+import java.time.LocalDateTime
 
 @Component
 class UserDAO(private val database: Database) {
@@ -79,6 +81,16 @@ class UserDAO(private val database: Database) {
         groupName = row[Group.name]!!
     )
 
+    /**
+     * Bind user with OAuth.
+     * Because of the multiple duplicate index, use manual insertOrUpdate instead of org.ktorm.support.mysql.insertOrUpdate
+     * @param id user id
+     * @param oauthId oauth id
+     * @param oauthName oauth name
+     * @param providerName provider name
+     * @return true if bind success
+     * @throws Exception if OAuth provider does not exist
+     */
     fun bindUserWithOAuth(id: Long, oauthId: String, oauthName: String, providerName: String): Boolean {
         val providerId = database.from(OAuthProvider)
             .select()
@@ -87,13 +99,39 @@ class UserDAO(private val database: Database) {
         if (providerId == null) {
             throw Exception("OAuth provider does not exist")
         }
-        val count = database.insert(OAuthUser) {
-            set(OAuthUser.userId, id)
-            set(OAuthUser.oauthId, oauthId)
-            set(OAuthUser.oauthName, oauthName)
-            set(OAuthUser.providerId, providerId)
+        var isRebind = false
+        // effect row count
+        val count: Int
+        database.from(OAuthUser)
+            .select()
+            .where {
+                OAuthUser.userId eq id
+                OAuthUser.providerId eq providerId
+            }.iterator().asSequence().forEach { _ ->
+                isRebind = true
+            }
+        if (isRebind) {
+            // update oauth info
+            count = database.update(OAuthUser) {
+                set(OAuthUser.oauthId, oauthId)
+                set(OAuthUser.oauthName, oauthName)
+                set(OAuthUser.modifyTime, LocalDateTime.now())
+                where {
+                    OAuthUser.userId eq id
+                    OAuthUser.providerId eq providerId
+                }
+            }
+        } else {
+            // insert oauth info
+            count = database.insert(OAuthUser) {
+                set(OAuthUser.userId, id)
+                set(OAuthUser.providerId, providerId)
+                set(OAuthUser.oauthId, oauthId)
+                set(OAuthUser.oauthName, oauthName)
+            }
         }
-        return count == 1
+        // return true if effect row count > 0
+        return count > 0
     }
 
 }
