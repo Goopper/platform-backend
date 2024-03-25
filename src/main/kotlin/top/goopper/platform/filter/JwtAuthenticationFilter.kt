@@ -3,13 +3,17 @@ package top.goopper.platform.filter
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
+import top.goopper.platform.advice.GlobalExceptionAdvice
 import top.goopper.platform.service.JwtTokenService
 import top.goopper.platform.config.SecurityConfig.Companion.AUTHORIZATION_HEADER
 import top.goopper.platform.config.SecurityConfig.Companion.whiteList
 
 class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : OncePerRequestFilter() {
+
+    private val authLogger = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
 
     /**
      * 重写shouldNotFilter方法，返回true表示不进行过滤
@@ -31,12 +35,16 @@ class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : On
     ) {
         val token = request.getHeader(AUTHORIZATION_HEADER)
         // verify token
-        val payload = jwtTokenService.validateAuthToken(token)
-        // if token is valid, set authentication
-        val authentication = jwtTokenService.getAuthentication(payload)
-        SecurityContextHolder.getContext().authentication = authentication
-        // if token is valid, renew token expiration
-        jwtTokenService.renewAuthTokenExpiration(token)
+        try {
+            val payload = jwtTokenService.validateAuthToken(token)
+            // if token is valid, set authentication
+            val authentication = jwtTokenService.getAuthentication(payload)
+            SecurityContextHolder.getContext().authentication = authentication
+            // if token is valid, renew token expiration
+            jwtTokenService.renewAuthTokenExpiration(token)
+        } catch (e: Exception) {
+            authLogger.error("Token verify failed: ${e.message}")
+        }
         filterChain.doFilter(request, response)
     }
 }
