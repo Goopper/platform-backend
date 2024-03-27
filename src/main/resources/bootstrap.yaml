@@ -1,4 +1,7 @@
 spring:
+  # 默认启用 test 环境
+  profiles:
+    active: test
   application:
     name: platform-backend
   cloud:

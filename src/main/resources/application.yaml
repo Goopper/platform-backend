@@ -1,16 +1,5 @@
 server:
   port: 8888
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: 47d838b6baed219d15e2
-            client-secret: 0df7c4d195c889a002afbbda4bd984801dd51975
-            scope:
-              - user:email
-              - read:user
 logging:
   level:
     root: info

@@ -1,8 +1,15 @@
+# 本地开发指南
+
+> 需要注意，下面的oauth2客户端的信息目前为 https://github.com/organizations/Goopper/settings/apps/goopper-dev
+>
+> 此APP是为本地开发所用，回调地址配置为 http://localhost:8888
+
 # 不使用Consul配置中心
 
 ## 1. 修改配置文件
 
 修改resources目录下的`bootstrap-dev.yml`文件，内容替换为你的配置：
+
 ```yaml
 spring:
   application:
@@ -13,6 +20,14 @@ spring:
     # 关闭consul
     consul:
       enabled: false
+  # OAuth 信息
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Iv1.6a814d5cbc56f413
+            client-secret: b075bbd36668fdf127e69e2a1aae02e5ec2019ac
   datasource:
     url: jdbc:mysql://localhost:3306/goopper?useUnicode=true&characterEncoding=utf8&useSSL=false
     username: root
@@ -55,6 +70,14 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
+  # OAuth 信息
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Iv1.6a814d5cbc56f413
+            client-secret: b075bbd36668fdf127e69e2a1aae02e5ec2019ac
   data:
     redis:
       host: localhost

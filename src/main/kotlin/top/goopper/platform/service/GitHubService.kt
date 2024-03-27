@@ -1,6 +1,7 @@
 package top.goopper.platform.service
 
 import eu.bitwalker.useragentutils.UserAgent
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -16,15 +17,19 @@ import top.goopper.platform.dto.JwtSubjectDTO
 @Service
 class GitHubService(
     private val restTemplate: RestTemplate,
-    private val userDAO: UserDAO,
-    private val jwtTokenService: JwtTokenService
 ) {
+
+    @Value("\${spring.security.oauth2.client.registration.github.client-id}")
+    private lateinit var clientId: String
+
+    @Value("\${spring.security.oauth2.client.registration.github.client-secret}")
+    private lateinit var clientSecret: String
 
     fun getAccessToken(code: String): String {
         val url = "https://github.com/login/oauth/access_token"
         val params = mapOf(
-            "client_id" to "47d838b6baed219d15e2",
-            "client_secret" to "0df7c4d195c889a002afbbda4bd984801dd51975",
+            "client_id" to clientId,
+            "client_secret" to clientSecret,
             "code" to code)
         val httpEntity = HttpEntity(params, HttpHeaders())
         val response = restTemplate.exchange<String>(url, HttpMethod.POST, httpEntity)
@@ -42,31 +47,14 @@ class GitHubService(
     }
 
     /**
-     * Check if the user's oauth exists in the database
-     * @param githubID user id from GitHub
-     * @param userAgent user agent
-     * @return jwt token
+     * Get OAuth URL
+     * @param redirectUrl redirect url
+     * @return OAuth URL
      */
-    fun authenticate(githubID: String, userAgentStr: String): String {
-        val userAgent = UserAgent.parseUserAgentString(userAgentStr)
-        val user = userDAO.loadUserByOAuthId(githubID)
-        // save to SecurityContext
-        val authentication =
-            UsernamePasswordAuthenticationToken(user, user.number, listOf(GrantedAuthority { user.roleName }))
-        SecurityContextHolder.getContext().authentication = authentication
-        // create jwt and return
-        val jwt = jwtTokenService.storeAuthToken(
-            JwtSubjectDTO(
-                uid = user.id,
-                number = user.number,
-                name = user.name,
-                roleName = user.roleName,
-                browserName = userAgent.browser.name,
-                deviceName = userAgent.operatingSystem.deviceType.name,
-                ua = userAgentStr
-            )
-        )
-        return jwt
+    fun getOAuthUrl(redirectUrl: String): String {
+        return "https://github.com/login/oauth/authorize?" +
+                "&client_id=$clientId" +
+                "&redirect_uri=$redirectUrl"
     }
 
 }

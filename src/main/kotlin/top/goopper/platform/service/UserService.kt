@@ -1,7 +1,6 @@
 package top.goopper.platform.service
 
 import eu.bitwalker.useragentutils.UserAgent
-import org.springframework.context.annotation.Bean
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -30,7 +29,7 @@ class UserService(
      */
     fun authenticate(number: Long, password: String, userAgentStr: String): String {
         // load user with number
-        val fullUserDetails = userDAO.loadUserWithPasswordByUserNumber(number)
+        val fullUserDetails = userDAO.loadFullUserByUserNumber(number)
         val user = fullUserDetails.raw
         // validate password
         if (!passwordEncoder.matches(password, fullUserDetails.encodedPassword)) {
@@ -58,7 +57,7 @@ class UserService(
     }
 
     /**
-     * Implement loadUserByUsername method
+     * Implement loadUserByUsername method for Spring Security
      * @param username user number
      * @return UserDetails
      * @throws Exception if user does not exist

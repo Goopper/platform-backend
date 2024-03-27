@@ -1,50 +1,32 @@
-package top.goopper.platform.controller
+package top.goopper.platform.controller.oauth
 
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import eu.bitwalker.useragentutils.UserAgent
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import top.goopper.platform.service.JwtTokenService
 import top.goopper.platform.pojo.Response
-import top.goopper.platform.service.GitHubService
 import top.goopper.platform.service.OAuthService
 
 @RestController
 @RequestMapping("/oauth")
-class OAuthController(
-    private val gitHubService: GitHubService,
-    private val oauthService: OAuthService,
-) {
-    /**
-     * GitHub OAuth callback
-     * @param code GitHub OAuth code
-     */
-    @GetMapping("/github/callback")
-    fun oauthGithubCallback(@RequestParam code: String): ResponseEntity<Response> {
-        val accessToken = gitHubService.getAccessToken(code)
-        val userInfo = gitHubService.getUserInfo(accessToken)
-        val githubUser = jsonMapper().readValue(userInfo, Map::class.java)
-        return ResponseEntity.ok(Response.success(githubUser))
-    }
-
+class CommonController(private val oauthService: OAuthService) {
     /**
      * GitHub OAuth client login
      * @param oauthId oauth id
      * @param request http request, provide user agent
      */
-    @PostMapping("/github/login")
-    fun oauthGithubLogin(
+    @PostMapping("/login/{providerName}")
+    fun login(
         @RequestParam oauthId: String,
+        @PathVariable providerName: String,
         request: HttpServletRequest
     ): ResponseEntity<Response> {
-        val jwt = gitHubService.authenticate(
+        val jwt = oauthService.authenticate(
             oauthId,
+            providerName,
             request.getHeader("User-Agent")
         )
         return ResponseEntity.ok(Response.success(jwt))
@@ -55,16 +37,19 @@ class OAuthController(
      * @param oauthId oauth id
      * @param oauthName oauth name
      */
-    @PostMapping("/github/bind")
-    fun oauthGithubBind(
+    @PostMapping("/bind/{providerName}")
+    fun bind(
         @RequestParam oauthId: String,
         @RequestParam oauthName: String,
+        @RequestParam isRebind: Boolean,
+        @PathVariable providerName: String,
         request: HttpServletRequest
     ): ResponseEntity<Response> {
         val result = oauthService.bindUserWithOAuth(
             oauthId,
             oauthName,
-            "github"
+            providerName,
+            isRebind
         )
         return if (result) {
             ResponseEntity.ok(Response.success("Bind success"))

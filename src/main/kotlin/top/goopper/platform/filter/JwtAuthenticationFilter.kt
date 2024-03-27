@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
 import top.goopper.platform.advice.GlobalExceptionAdvice
 import top.goopper.platform.service.JwtTokenService
@@ -14,6 +15,7 @@ import top.goopper.platform.config.SecurityConfig.Companion.whiteList
 class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : OncePerRequestFilter() {
 
     private val authLogger = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
+    private val pathMatcher = AntPathMatcher()
 
     /**
      * 重写shouldNotFilter方法，返回true表示不进行过滤
@@ -21,7 +23,7 @@ class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : On
      * @return 是否过滤
      */
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        return whiteList.any { request.requestURI.contains(it) }
+        return whiteList.any { pathMatcher.match(it, request.requestURI) }
     }
 
     /**
