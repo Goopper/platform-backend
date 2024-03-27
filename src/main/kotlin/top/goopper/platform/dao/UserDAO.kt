@@ -36,17 +36,4 @@ class UserDAO(private val database: Database) {
         return processUserDTO(rows)
     }
 
-    fun loadUserByOAuth(githubID: String): UserDTO {
-        val rows = database.from(OAuthUser)
-            .innerJoin(User, OAuthUser.userId eq User.id)
-            .innerJoin(Role, User.roleId eq Role.id)
-            .innerJoin(Group, User.groupId eq Group.id)
-            .innerJoin(OAuthProvider, OAuthUser.providerId eq OAuthProvider.id)
-            .select()
-            .where {
-                OAuthUser.oauthId eq githubID
-            }.iterator()
-        return processUserDTO(rows)
-    }
-
 }

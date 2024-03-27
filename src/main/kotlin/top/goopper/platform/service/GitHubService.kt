@@ -1,18 +1,12 @@
 package top.goopper.platform.service
 
-import eu.bitwalker.useragentutils.UserAgent
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.exchange
-import top.goopper.platform.dao.UserDAO
-import top.goopper.platform.dto.JwtSubjectDTO
 
 @Service
 class GitHubService(

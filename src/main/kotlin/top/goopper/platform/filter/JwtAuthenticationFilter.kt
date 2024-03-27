@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
-import top.goopper.platform.advice.GlobalExceptionAdvice
 import top.goopper.platform.service.JwtTokenService
 import top.goopper.platform.config.SecurityConfig.Companion.AUTHORIZATION_HEADER
 import top.goopper.platform.config.SecurityConfig.Companion.whiteList
