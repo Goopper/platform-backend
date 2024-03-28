@@ -8,7 +8,7 @@
 
 ## 1. 修改配置文件
 
-修改resources目录下的`bootstrap-dev.yml`文件，内容替换为你的配置：
+修改resources目录下的`bootstrap-dev.yml`和`application-dev.yaml`文件，内容替换为你的配置：
 
 ```yaml
 spring:
@@ -38,6 +38,12 @@ spring:
       host: localhost
       port: 6379
       database: 0
+s3:
+  endpoint: https://s3.tebi.io
+  region: de
+  access-key: uNSPywZt8jog4dbA
+  secret-key: wRn2JCbVu0EWvj6g7QBLRqS3P7dr1TDd75fwN9Qo
+  bucket: goopper
 ```
 
 ## 2. 启动项目
@@ -58,10 +64,11 @@ consul下载地址：https://www.consul.io/downloads.html 。版本为1.18.0
 consul agent -server -bind=127.0.0.1 -data-dir=data -ui -bootstrap -log-level=error
 ```
 > 注意：consul默认ui端口为8500，需要进入ui界面配置。 记得在consul根目录下创建data文件夹（consul.exe和文件夹在同一个目录内），否则会报错。
+> 而且需要将环境切换为非开发环境
 
 ## 2. consul配置Key/Value
 
-创建key，名字为config/platform/data，格式为yaml。修改下面的配置为你的数据库配置后创建。
+创建key，名字为config/platform/data，格式为yaml。修改下面的配置为你的配置后创建。
 
 ```yaml
 spring:
@@ -83,6 +90,12 @@ spring:
       host: localhost
       port: 6379
       database: 0
+s3:
+  endpoint: https://s3.tebi.io
+  region: de
+  access-key: uNSPywZt8jog4dbA
+  secret-key: wRn2JCbVu0EWvj6g7QBLRqS3P7dr1TDd75fwN9Qo
+  bucket: goopper
 ```
 
 ## 3. 启动项目

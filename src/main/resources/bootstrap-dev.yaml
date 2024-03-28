@@ -6,23 +6,3 @@ spring:
       enabled: false
     consul:
       enabled: false
-  datasource:
-    url: jdbc:mysql://localhost:3306/goopper?useUnicode=true&characterEncoding=utf8&useSSL=false
-    username: root
-    password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: Iv1.6a814d5cbc56f413
-            client-secret: b075bbd36668fdf127e69e2a1aae02e5ec2019ac
-            scope:
-              - user:email
-              - read:user
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 0

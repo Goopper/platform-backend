@@ -1,18 +1,23 @@
 package top.goopper.platform.service
 
 import eu.bitwalker.useragentutils.UserAgent
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import top.goopper.platform.dao.OAuthDAO
-import top.goopper.platform.dto.JwtSubjectDTO
+import top.goopper.platform.dao.ProviderDAO
+import top.goopper.platform.dto.OAuthDTO
+import top.goopper.platform.pojo.JwtSubject
 import top.goopper.platform.dto.UserDTO
 
 @Service
 class OAuthService(
     private val oauthDAO: OAuthDAO,
-    private val jwtTokenService: JwtTokenService
+    private val jwtTokenService: JwtTokenService,
+    private val githubService: GithubService,
+    private val providerDAO: ProviderDAO
 ) {
 
     /**
@@ -28,7 +33,7 @@ class OAuthService(
         SecurityContextHolder.getContext().authentication = authentication
         // create jwt and return
         val jwt = jwtTokenService.storeAuthToken(
-            JwtSubjectDTO(
+            JwtSubject(
                 uid = user.id,
                 number = user.number,
                 name = user.name,
@@ -45,11 +50,30 @@ class OAuthService(
      * Bind user by OAuth
      * @return true if success
      */
-    fun bindUserWithOAuth(oauthId: String, oauthName: String, providerName: String, isRebind: Boolean): Boolean {
+    fun bindUserWithOAuth(oauthId: String, oauthName: String, providerName: String, isRebind: Boolean) {
         // load user form SecurityContext @see UserDTO
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val result = oauthDAO.bindUserWithOAuth(user.id, oauthId, oauthName, providerName, isRebind)
-        return result
+        if (providerName == "github") {
+            // throw exception if not exists
+            githubService.checkExists(oauthName, oauthId)
+        }
+        try {
+            oauthDAO.bindUserWithOAuth(user.id, oauthId, oauthName, providerName, isRebind)
+        } catch (e: DuplicateKeyException) {
+            throw Exception("OAuth binding already exists")
+        }
+    }
+
+    // throw exception if bind failed
+    fun unbindUserWithOAuth(providerName: String) {
+        val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
+        oauthDAO.unbindUserWithOAuth(user.id, providerName)
+    }
+
+    fun getOAuthBindingList(): List<OAuthDTO> {
+        val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
+        val binds = providerDAO.loadOAuthBindingList(user.id)
+        return binds
     }
 
 }

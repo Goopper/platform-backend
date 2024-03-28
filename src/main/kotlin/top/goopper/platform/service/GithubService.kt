@@ -1,15 +1,17 @@
 package top.goopper.platform.service
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.exchange
 
 @Service
-class GitHubService(
+class GithubService(
     private val restTemplate: RestTemplate,
 ) {
 
@@ -49,6 +51,24 @@ class GitHubService(
         return "https://github.com/login/oauth/authorize?" +
                 "&client_id=$clientId" +
                 "&redirect_uri=$redirectUrl"
+    }
+
+    /**
+     * Check if user exists on GitHub
+     * @param username GitHub username
+     * @throws Exception if user not found
+     */
+    fun checkExists(username: String, id: String) {
+        val url = "https://api.github.com/users/$username"
+        try {
+            val response = restTemplate.exchange<String>(url, HttpMethod.GET)
+            val user = jacksonObjectMapper().readValue(response.body, Map::class.java)
+            if (user["id"].toString() != id) {
+                throw Exception("User not found")
+            }
+        } catch (e: HttpClientErrorException) {
+            throw Exception("User not found or http error")
+        }
     }
 
 }

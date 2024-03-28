@@ -1,6 +1,6 @@
-package top.goopper.platform.dto
+package top.goopper.platform.pojo
 
-data class JwtSubjectDTO(
+data class JwtSubject(
     val uid: Long,
     val number: Long,
     val name: String,

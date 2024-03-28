@@ -35,16 +35,17 @@ class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : On
         filterChain: FilterChain
     ) {
         val token = request.getHeader(AUTHORIZATION_HEADER)
+        val realIp = request.getHeader("X-Forwarded-For")
         // verify token
         try {
             val payload = jwtTokenService.validateAuthToken(token)
             // if token is valid, set authentication
-            val authentication = jwtTokenService.getAuthentication(payload)
+            val authentication = jwtTokenService.getAuthenticationFromJWT(payload)
             SecurityContextHolder.getContext().authentication = authentication
             // if token is valid, renew token expiration
             jwtTokenService.renewAuthTokenExpiration(token)
         } catch (e: Exception) {
-            authLogger.error("Token verify failed: ${e.message}")
+            authLogger.error("Token verify failed, message: ${e.message}, ip: $realIp, url: ${request.requestURI}")
         }
         filterChain.doFilter(request, response)
     }

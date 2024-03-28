@@ -2,6 +2,7 @@ package top.goopper.platform.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys.hmacShaKeyFor
 import org.springframework.data.redis.core.RedisTemplate
@@ -10,9 +11,21 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.stereotype.Component
 import top.goopper.platform.dao.UserDAO
-import top.goopper.platform.dto.JwtSubjectDTO
+import top.goopper.platform.pojo.JwtSubject
 import java.util.*
 
+/**
+ * JWT Auth TOKEN 包含：
+ * 1. uid 用户ID
+ * 2. number 用户编号
+ * 3. name 用户名
+ * 4. roleName 用户角色
+ * 5. browserName 浏览器名称
+ * 6. deviceName 设备名称
+ * 7. ua UserAgent
+ * JWT Auth TOKEN 有效期 1h
+ * @see JwtSubject
+ */
 @Component
 class JwtTokenService(
     private val redisTemplate: RedisTemplate<String, Any>,
@@ -26,18 +39,18 @@ class JwtTokenService(
 
     /**
      * Create token
-     * @param payload payload data
-     * @see JwtSubjectDTO
+     * @param subject payload data
+     * @see JwtSubject
      * @return jwt token
      */
-    fun storeAuthToken(payload: JwtSubjectDTO): String {
+    fun storeAuthToken(subject: JwtSubject): String {
         val now = Date()
         val token = Jwts.builder()
-            .subject(jacksonObjectMapper().writeValueAsString(payload))
+            .subject(jacksonObjectMapper().writeValueAsString(subject))
             .issuedAt(now)
             .signWith(hmacShaKeyFor(secretKey.toByteArray()))
             .compact()
-        val key = ("auth:${payload.uid}:${payload.hashCode()}").toByteArray()
+        val key = ("auth:${subject.uid}:${subject.hashCode()}").toByteArray()
         redisTemplate.execute {
             it.stringCommands().set(key, token.toByteArray())
             it.keyCommands().expire(key, validityInMilliseconds / 1000)
@@ -50,8 +63,8 @@ class JwtTokenService(
      * @param token jwt token
      */
     fun renewAuthTokenExpiration(token: String) {
-        val userDTO = getSubjectDTO(token)
-        val key = ("auth:${userDTO.uid}:${userDTO.hashCode()}").toByteArray()
+        val subject = getSubject(token)
+        val key = ("auth:${subject.uid}:${subject.hashCode()}").toByteArray()
         redisTemplate.execute {
             it.keyCommands().expire(key, validityInMilliseconds / 1000)
         }
@@ -63,8 +76,8 @@ class JwtTokenService(
      * @throws Exception if token is invalid
      */
     fun removeAuthToken(token: String) {
-        val userDTO = getSubjectDTO(token)
-        val key = ("auth:${userDTO.uid}:${userDTO.hashCode()}").toByteArray()
+        val subject = getSubject(token)
+        val key = ("auth:${subject.uid}:${subject.hashCode()}").toByteArray()
         redisTemplate.execute {
             it.keyCommands().del(key)
         }
@@ -76,16 +89,16 @@ class JwtTokenService(
      * @return true if token is valid
      * @throws Exception if token is invalid or expired
      */
-    fun validateAuthToken(token: String): JwtSubjectDTO {
-        val payload = getSubjectDTO(token)
-        val key = ("auth:${payload.uid}:${payload.hashCode()}").toByteArray()
+    fun validateAuthToken(token: String): JwtSubject {
+        val subject = getSubject(token)
+        val key = ("auth:${subject.uid}:${subject.hashCode()}").toByteArray()
         redisTemplate.execute {
             val auth = it.stringCommands().get(key)
             if (auth == null || String(auth) != token) {
                 throw Exception("Token is invalid or expired.")
             }
         }
-        return payload
+        return subject
     }
 
     /**
@@ -93,28 +106,50 @@ class JwtTokenService(
      * @param token jwt token
      * @return payload data
      * @throws Exception if token is invalid
-     * @see JwtSubjectDTO
+     * @see JwtSubject
      */
-    fun getSubjectDTO(token: String): JwtSubjectDTO {
-        val subject = Jwts.parser().verifyWith(hmacShaKeyFor(secretKey.toByteArray())).build()
-            .parseSignedClaims(token).payload.subject
-        val payloadDTO: JwtSubjectDTO = jacksonObjectMapper().readValue(subject)
+    fun getSubject(token: String): JwtSubject {
+        val subject = getPayload(token).subject
+        val payloadDTO: JwtSubject = jacksonObjectMapper().readValue(subject)
         return payloadDTO
     }
 
     /**
      * Get authentication from jwt token
      * @param payload payload data
-     * @see JwtSubjectDTO
+     * @see JwtSubject
      * @return Authentication
      */
-    fun getAuthentication(payload: JwtSubjectDTO): Authentication {
+    fun getAuthenticationFromJWT(payload: JwtSubject): Authentication {
         val user = userDAO.loadUserByNumber(payload.number)
         return UsernamePasswordAuthenticationToken(
             user,
             user.id,
             listOf(GrantedAuthority { user.roleName })
         )
+    }
+
+    /**
+     * Get payload from token
+     * @param token jwt token
+     */
+    fun getPayload(token: String): Claims {
+        val subject = Jwts.parser().verifyWith(hmacShaKeyFor(secretKey.toByteArray())).build()
+            .parseSignedClaims(token).payload
+        return subject
+    }
+
+    /**
+     * When important security info changes
+     * Revoke all tokens by user id, clear the user's login status
+     */
+    fun revokeAllTokensByUserId(id: Long) {
+        redisTemplate.execute {
+            val pattern = "auth:$id:*"
+            val keys = it.keyCommands().keys(pattern.toByteArray()).orEmpty().toTypedArray()
+            // revoke all tokens
+            it.keyCommands().del(*keys)
+        }
     }
 
 }

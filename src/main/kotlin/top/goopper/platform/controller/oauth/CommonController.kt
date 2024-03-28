@@ -45,16 +45,25 @@ class CommonController(private val oauthService: OAuthService) {
         @PathVariable providerName: String,
         request: HttpServletRequest
     ): ResponseEntity<Response> {
-        val result = oauthService.bindUserWithOAuth(
+        oauthService.bindUserWithOAuth(
             oauthId,
             oauthName,
             providerName,
             isRebind
         )
-        return if (result) {
-            ResponseEntity.ok(Response.success("Bind success"))
-        } else {
-            ResponseEntity.ok(Response.error(400, "Bind failed"))
-        }
+        return ResponseEntity.ok(Response.success("Bind success"))
+    }
+
+    /**
+     * OAuth client unbinding, unbinding user's account with OAuth provider
+     */
+    @PostMapping("/unbind/{providerName}")
+    fun unbind(
+        @PathVariable providerName: String,
+        request: HttpServletRequest
+    ): ResponseEntity<Response> {
+        // throw exception if bind failed
+        oauthService.unbindUserWithOAuth(providerName)
+        return ResponseEntity.ok(Response.success("Unbind success"))
     }
 }
