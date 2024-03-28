@@ -5,8 +5,8 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
-import top.goopper.platform.advice.GlobalExceptionAdvice
 import top.goopper.platform.service.JwtTokenService
 import top.goopper.platform.config.SecurityConfig.Companion.AUTHORIZATION_HEADER
 import top.goopper.platform.config.SecurityConfig.Companion.whiteList
@@ -14,6 +14,7 @@ import top.goopper.platform.config.SecurityConfig.Companion.whiteList
 class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : OncePerRequestFilter() {
 
     private val authLogger = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
+    private val pathMatcher = AntPathMatcher()
 
     /**
      * 重写shouldNotFilter方法，返回true表示不进行过滤
@@ -21,7 +22,7 @@ class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : On
      * @return 是否过滤
      */
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        return whiteList.any { request.requestURI.contains(it) }
+        return whiteList.any { pathMatcher.match(it, request.requestURI) }
     }
 
     /**
@@ -34,16 +35,17 @@ class JwtAuthenticationFilter(private val jwtTokenService: JwtTokenService) : On
         filterChain: FilterChain
     ) {
         val token = request.getHeader(AUTHORIZATION_HEADER)
+        val realIp = request.getHeader("X-Forwarded-For")
         // verify token
         try {
             val payload = jwtTokenService.validateAuthToken(token)
             // if token is valid, set authentication
-            val authentication = jwtTokenService.getAuthentication(payload)
+            val authentication = jwtTokenService.getAuthenticationFromJWT(payload)
             SecurityContextHolder.getContext().authentication = authentication
             // if token is valid, renew token expiration
             jwtTokenService.renewAuthTokenExpiration(token)
         } catch (e: Exception) {
-            authLogger.error("Token verify failed: ${e.message}")
+            authLogger.error("Token verify failed, message: ${e.message}, ip: $realIp, url: ${request.requestURI}")
         }
         filterChain.doFilter(request, response)
     }

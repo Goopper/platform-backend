@@ -1,7 +1,8 @@
 package top.goopper.platform.service
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import eu.bitwalker.useragentutils.UserAgent
-import org.springframework.context.annotation.Bean
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -11,13 +12,17 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import top.goopper.platform.dao.UserDAO
-import top.goopper.platform.dto.JwtSubjectDTO
+import top.goopper.platform.dto.DeviceDTO
+import top.goopper.platform.pojo.JwtSubject
+import top.goopper.platform.dto.UserDTO
+import java.nio.charset.Charset
 
 @Service
 class UserService(
     private val jwtTokenService: JwtTokenService,
     private val userDAO: UserDAO,
-    private val passwordEncoder: BCryptPasswordEncoder
+    private val passwordEncoder: BCryptPasswordEncoder,
+    private val redisTemplate: RedisTemplate<String, String>
 ) : UserDetailsService {
 
     /**
@@ -30,7 +35,7 @@ class UserService(
      */
     fun authenticate(number: Long, password: String, userAgentStr: String): String {
         // load user with number
-        val fullUserDetails = userDAO.loadUserWithPasswordByUserNumber(number)
+        val fullUserDetails = userDAO.loadFullUserByUserNumber(number)
         val user = fullUserDetails.raw
         // validate password
         if (!passwordEncoder.matches(password, fullUserDetails.encodedPassword)) {
@@ -38,14 +43,9 @@ class UserService(
         }
         val userAgent = UserAgent.parseUserAgentString(userAgentStr)
         // save to SecurityContext
-        val authentication = UsernamePasswordAuthenticationToken(
-            user,
-            user.id,
-            listOf(GrantedAuthority { user.roleName })
-        )
-        SecurityContextHolder.getContext().authentication = authentication
+        updateCurrentAuthenticatedUser(user)
         // create payload
-        val payloadDTO = JwtSubjectDTO(
+        val payloadDTO = JwtSubject(
             user.id, user.number, user.name, user.roleName,
             userAgent.browser.name, userAgent.operatingSystem.name,
             userAgentStr
@@ -58,7 +58,7 @@ class UserService(
     }
 
     /**
-     * Implement loadUserByUsername method
+     * Implement loadUserByUsername method for Spring Security
      * @param username user number
      * @return UserDetails
      * @throws Exception if user does not exist
@@ -77,6 +77,89 @@ class UserService(
      */
     fun logout(token: String) {
         jwtTokenService.removeAuthToken(token)
+    }
+
+    /**
+     * Load user by id
+     * @param id user id
+     * @return user
+     * @throws Exception if user does not exist
+     */
+    fun loadUserById(id: Long): UserDTO {
+        val user = userDAO.loadUserById(id)
+        return user
+    }
+
+    /**
+     * Load devices by user id
+     * @param uid user id
+     * @return list of devices
+     */
+    fun loadDevice(uid: Long): List<DeviceDTO> {
+        val pattern = "auth:$uid:*"
+        val devices = mutableListOf<DeviceDTO>()
+        redisTemplate.execute {
+            val keys = it.keyCommands().keys(pattern.toByteArray()).orEmpty().toTypedArray()
+            it.stringCommands().mGet(*keys).orEmpty().forEach { value ->
+                val jwtToken = value.toString(Charset.forName("UTF-8"))
+                val payload = jwtTokenService.getPayload(jwtToken)
+                val subject = jacksonObjectMapper().readValue(payload.subject, JwtSubject::class.java)
+                devices.add(DeviceDTO(
+                    payload.subject.hashCode().toString(),
+                    subject.ua,
+                    subject.deviceName,
+                    payload.issuedAt.toString()
+                ))
+            }
+        }
+        return devices
+    }
+
+    /**
+     * Update user email
+     * TODO: Verify email and send email
+     */
+    fun updateEmail(old: String, new: String) {
+        val user = currentAuthenticatedUser()
+        if (user.email != old) {
+            throw Exception("Old email incorrect")
+        }
+        userDAO.updateEmail(user.id, new)
+        // update email in SecurityContext
+        updateCurrentAuthenticatedUser(user.copy(email = new))
+    }
+
+    /**
+     * Update user password
+     */
+    fun updatePassword(old: String, new: String) {
+        val user = currentAuthenticatedUser()
+        val encodedPassword = userDAO.loadFullUserByUserNumber(user.number).encodedPassword
+        if (!passwordEncoder.matches(old, encodedPassword)) {
+            throw Exception("Old password incorrect")
+        }
+        userDAO.updatePassword(user.id, passwordEncoder.encode(new))
+        // revoke all tokens
+        jwtTokenService.revokeAllTokensByUserId(user.id)
+    }
+
+    /**
+     * Get current authenticated user
+     */
+    private fun currentAuthenticatedUser(): UserDTO {
+        val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
+        return user
+    }
+
+    /**
+     * Update current authenticated user in SecurityContext
+     */
+    private fun updateCurrentAuthenticatedUser(user: UserDTO) {
+        SecurityContextHolder.getContext().authentication = UsernamePasswordAuthenticationToken(
+            user,
+            user.number,
+            listOf(GrantedAuthority { user.roleName })
+        )
     }
 
 }

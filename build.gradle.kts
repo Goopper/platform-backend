@@ -55,6 +55,13 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
     // bootstrap
     implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
+    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
+    implementation("com.amazonaws:aws-java-sdk-s3:1.12.688") {
+        // exclude commons-logging to avoid conflict with spring-boot
+        exclude(group = "commons-logging", module = "commons-logging")
+    }
+    // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+    implementation("javax.xml.bind:jaxb-api:2.3.1")
 }
 
 dependencyManagement {

@@ -5,6 +5,7 @@ data class UserDTO(
     val name: String,
     val email: String,
     val avatar: String,
+    val sex: Boolean,
     val number: Long,
     val roleId: Long,
     val groupId: Long,

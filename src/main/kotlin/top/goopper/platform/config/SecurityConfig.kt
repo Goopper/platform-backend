@@ -23,8 +23,9 @@ class SecurityConfig(
     companion object {
         val whiteList = arrayOf(
             "/login",
-            "/oauth/github/callback",
-            "/oauth/github/login",
+            "/oauth/*/url",
+            "/oauth/*/auth",
+            "/oauth/login/*",
             "/health")
         const val AUTHORIZATION_HEADER = "G-Authorization"
     }
