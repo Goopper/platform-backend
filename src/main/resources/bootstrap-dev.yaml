@@ -6,3 +6,6 @@ spring:
       enabled: false
     consul:
       enabled: false
+  servlet:
+    multipart:
+      max-file-size: 50MB

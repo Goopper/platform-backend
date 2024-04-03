@@ -1,7 +1,7 @@
 package top.goopper.platform.dto
 
 data class AttachmentDTO(
-    val id: Long?,
+    var id: Long?,
     val filename: String,
     val originalFilename: String?,
     val url: String,

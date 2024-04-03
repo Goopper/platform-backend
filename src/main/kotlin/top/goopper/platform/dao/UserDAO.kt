@@ -5,7 +5,7 @@ import org.ktorm.dsl.*
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dto.UserDTO
-import top.goopper.platform.entity.*
+import top.goopper.platform.table.*
 import top.goopper.platform.pojo.UserFullDetails
 import top.goopper.platform.utils.DTOUtils.Companion.processUserDTO
 import top.goopper.platform.utils.DTOUtils.Companion.processUserDTOByRows

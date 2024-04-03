@@ -1,4 +1,4 @@
-package top.goopper.platform.entity
+package top.goopper.platform.table
 
 import org.ktorm.schema.Table
 import org.ktorm.schema.datetime

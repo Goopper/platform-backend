@@ -4,7 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jsonMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import top.goopper.platform.pojo.Response
-import top.goopper.platform.service.GithubService
+import top.goopper.platform.service.oauth.GithubService
 
 @RestController
 @RequestMapping("/oauth/github")

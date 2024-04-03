@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import top.goopper.platform.pojo.Response
-import top.goopper.platform.service.OAuthService
+import top.goopper.platform.service.oauth.OAuthService
 
 @RestController
 @RequestMapping("/oauth")

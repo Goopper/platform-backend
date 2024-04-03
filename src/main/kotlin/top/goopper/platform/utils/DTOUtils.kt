@@ -3,7 +3,7 @@ package top.goopper.platform.utils
 import org.ktorm.dsl.QueryRowSet
 import top.goopper.platform.dto.OAuthDTO
 import top.goopper.platform.dto.UserDTO
-import top.goopper.platform.entity.*
+import top.goopper.platform.table.*
 
 class DTOUtils {
     companion object {

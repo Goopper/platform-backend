@@ -4,8 +4,8 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.springframework.stereotype.Component
 import top.goopper.platform.dto.OAuthDTO
-import top.goopper.platform.entity.OAuthProvider
-import top.goopper.platform.entity.OAuthUser
+import top.goopper.platform.table.OAuthProvider
+import top.goopper.platform.table.OAuthUser
 import top.goopper.platform.utils.DTOUtils.Companion.processOAuthDTOByRows
 
 @Component
