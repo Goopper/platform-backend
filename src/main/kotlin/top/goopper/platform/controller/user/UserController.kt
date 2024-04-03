@@ -1,4 +1,4 @@
-package top.goopper.platform.controller
+package top.goopper.platform.controller.user
 
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.pojo.Response
-import top.goopper.platform.service.OAuthService
+import top.goopper.platform.service.oauth.OAuthService
 import top.goopper.platform.service.UserService
 
 @RestController

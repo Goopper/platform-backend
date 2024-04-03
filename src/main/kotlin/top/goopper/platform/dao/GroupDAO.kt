@@ -4,7 +4,7 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.springframework.stereotype.Component
 import top.goopper.platform.dto.GroupDTO
-import top.goopper.platform.entity.Group
+import top.goopper.platform.table.Group
 
 @Component
 class GroupDAO(private val database: Database) {

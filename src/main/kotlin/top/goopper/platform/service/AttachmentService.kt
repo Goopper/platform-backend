@@ -2,18 +2,21 @@ package top.goopper.platform.service
 
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.CannedAccessControlList
+import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import top.goopper.platform.dao.AttachmentDAO
 import top.goopper.platform.dto.AttachmentDTO
 import java.io.File
 import java.util.UUID
 
 @Service
-class FileService(
-    private val s3Client: AmazonS3
+class AttachmentService(
+    private val s3Client: AmazonS3,
+    private val attachmentDAO: AttachmentDAO
 ) {
 
     @Value("\${s3.endpoint}")
@@ -22,7 +25,7 @@ class FileService(
     @Value("\${s3.bucket}")
     lateinit var bucket: String
 
-    private val logger = LoggerFactory.getLogger(FileService::class.java)
+    private val logger = LoggerFactory.getLogger(AttachmentService::class.java)
 
     // upload file to s3
     fun upload(upload: MultipartFile): AttachmentDTO {
@@ -37,8 +40,9 @@ class FileService(
         val result = s3Client.putObject(request)
         // delete temp file
         file.delete()
+
         logger.info("File upload finish, md5: ${result.contentMd5}, name: $filename")
-        return AttachmentDTO(
+        val dto = AttachmentDTO(
             id = null,
             filename = filename,
             originalFilename = upload.originalFilename,
@@ -47,12 +51,25 @@ class FileService(
             type = type,
             md5 = result.contentMd5
         )
+        return dto
     }
 
     // delete file form s3
     fun delete(filename: String) {
+        // first delete from database
+        attachmentDAO.deleteAttachmentByName(filename)
+        // then delete from s3
         s3Client.deleteObject(bucket, filename)
         logger.info("File delete, filename: $filename")
+    }
+
+    /**
+     * Batch delete files from s3
+     */
+    fun batchDelete(filenames: List<String>) {
+        val request = DeleteObjectsRequest(bucket)
+        request.withKeys(*filenames.toTypedArray())
+        s3Client.deleteObjects(request)
     }
 
 }

@@ -1,4 +1,4 @@
-package top.goopper.platform.service
+package top.goopper.platform.service.oauth
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.beans.factory.annotation.Value

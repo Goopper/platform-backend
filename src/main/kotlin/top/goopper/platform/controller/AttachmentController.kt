@@ -10,27 +10,29 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import top.goopper.platform.pojo.Response
-import top.goopper.platform.service.FileService
+import top.goopper.platform.service.AttachmentService
 
 @RestController
-@RequestMapping("/file")
-class FileController(
-    private val fileService: FileService
+@RequestMapping("/attachment")
+class AttachmentController(
+    private val attachmentService: AttachmentService
 ) {
 
-    private val logger = LoggerFactory.getLogger(FileController::class.java)
+    private val logger = LoggerFactory.getLogger(AttachmentController::class.java)
 
+    // upload file to s3
+    // TODO content conflict check
     @PostMapping("/upload")
     fun upload(@RequestParam upload: MultipartFile, request: HttpServletRequest): ResponseEntity<Response> {
         val realIp = request.getHeader("X-Forwarded-For")
         logger.info("File upload, ip: $realIp, size: ${upload.size}")
-        val result = fileService.upload(upload)
+        val result = attachmentService.upload(upload)
         return ResponseEntity.ok(Response.success(result))
     }
 
     @DeleteMapping("/delete")
     fun delete(@RequestParam filename: String): ResponseEntity<Response> {
-        fileService.delete(filename)
+        attachmentService.delete(filename)
         return ResponseEntity.ok(Response.success())
     }
 

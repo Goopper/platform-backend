@@ -1,4 +1,4 @@
-package top.goopper.platform.service
+package top.goopper.platform.service.oauth
 
 import eu.bitwalker.useragentutils.UserAgent
 import org.springframework.dao.DuplicateKeyException
@@ -11,6 +11,7 @@ import top.goopper.platform.dao.ProviderDAO
 import top.goopper.platform.dto.OAuthDTO
 import top.goopper.platform.pojo.JwtSubject
 import top.goopper.platform.dto.UserDTO
+import top.goopper.platform.service.JwtTokenService
 
 @Service
 class OAuthService(

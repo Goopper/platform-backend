@@ -68,7 +68,7 @@ consul agent -server -bind=127.0.0.1 -data-dir=data -ui -bootstrap -log-level=er
 
 ## 2. consul配置Key/Value
 
-创建key，名字为config/platform/data，格式为yaml。修改下面的配置为你的配置后创建。
+创建key，名字为config/platform-backend/data，格式为yaml。修改下面的配置为你的配置后创建。
 
 ```yaml
 spring:
