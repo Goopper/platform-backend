@@ -1,7 +1,7 @@
 package top.goopper.platform.dto
 
 data class OAuthDTO(
-    var id: Long,
+    var id: Int,
     var name: String,
     var bind: Boolean,
     var bindUsername: String?,

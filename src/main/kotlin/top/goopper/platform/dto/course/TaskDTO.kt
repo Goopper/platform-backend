@@ -1,8 +1,8 @@
 package top.goopper.platform.dto.course
 
 data class TaskDTO(
-    val id: Long,
+    val id: Int,
     val name: String,
     val status: Boolean,
-    val score: Long,
+    val score: Int?,
 )

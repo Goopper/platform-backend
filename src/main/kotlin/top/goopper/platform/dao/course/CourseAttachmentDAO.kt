@@ -2,15 +2,15 @@ package top.goopper.platform.dao.course
 
 import org.ktorm.database.Database
 import org.ktorm.dsl.batchInsert
-import org.springframework.stereotype.Component
-import top.goopper.platform.table.CourseAttachment
+import org.springframework.stereotype.Repository
+import top.goopper.platform.table.course.CourseAttachment
 
-@Component
+@Repository
 class CourseAttachmentDAO(
     private val database: Database
 ) {
 
-    fun batchInsertCourseAttachment(courseId: Long, attachmentIds: List<Long>) {
+    fun batchInsertCourseAttachment(courseId: Int, attachmentIds: List<Int>) {
         if (attachmentIds.isEmpty()) return
         database.batchInsert(CourseAttachment) {
             attachmentIds.forEach { attachmentId ->

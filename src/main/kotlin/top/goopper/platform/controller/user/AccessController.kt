@@ -25,7 +25,7 @@ class AccessController(
      */
     @PostMapping("/login")
     fun login(
-        @RequestParam number: Long,
+        @RequestParam number: Int,
         @RequestParam password: String,
         request: HttpServletRequest
     ): ResponseEntity<Response> {

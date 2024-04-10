@@ -2,33 +2,37 @@ package top.goopper.platform.dao.course
 
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import top.goopper.platform.dto.AttachmentDTO
 import top.goopper.platform.dto.course.CourseDTO
 import top.goopper.platform.dto.course.create.CreateCourseDTO
 import top.goopper.platform.dto.course.detail.CourseDetailDTO
-import top.goopper.platform.table.*
+import top.goopper.platform.enum.CourseStatusEnum
+import top.goopper.platform.table.User
+import top.goopper.platform.table.course.Course
+import top.goopper.platform.table.course.CourseType
+import top.goopper.platform.table.student.StudentCourse
 import java.time.LocalDateTime
 
-@Component
+@Repository
 class CourseDAO(
     private val database: Database,
 ) {
 
-    fun createCourse(createCourseDTO: CreateCourseDTO): Long {
+    fun createCourse(createCourseDTO: CreateCourseDTO): Int {
         val courseId = database.insertAndGenerateKey(Course) {
             set(it.name, createCourseDTO.name)
             set(it.teacherId, createCourseDTO.teacherId)
             set(it.typeId, createCourseDTO.typeId)
             set(it.desc, createCourseDTO.desc)
             set(it.cover, createCourseDTO.cover)
-            set(it.statusId, 1)
+            set(it.statusId, CourseStatusEnum.DRAFT.id)
             set(it.totalTask, 0)
-        } as Long
+        } as Int
         return courseId
     }
 
-    fun loadCourseCreationInfo(courseId: Long): CreateCourseDTO {
+    fun loadCourseCreationInfo(courseId: Int): CreateCourseDTO {
         val creation = database.from(Course)
             .select()
             .where(Course.id eq courseId)
@@ -64,13 +68,13 @@ class CourseDAO(
         }
     }
 
-    fun deleteCourse(courseId: Long) {
+    fun deleteCourse(courseId: Int) {
         database.delete(Course) {
             it.id eq courseId
         }
     }
 
-    fun loadCourseDetail(courseId: Long): CourseDetailDTO {
+    fun loadCourseDetail(courseId: Int): CourseDetailDTO {
         val course = database.from(Course)
             .innerJoin(CourseType, CourseType.id eq Course.typeId)
             .innerJoin(User, User.id eq Course.teacherId)
@@ -91,7 +95,7 @@ class CourseDAO(
         return course
     }
 
-    fun loadTeacherCourseList(id: Long): List<CourseDTO> {
+    fun loadTeacherCourseList(id: Int): List<CourseDTO> {
         val courseList = database.from(Course)
             .innerJoin(CourseType, CourseType.id eq Course.typeId)
             .select()
@@ -106,6 +110,38 @@ class CourseDAO(
                 )
             }
         return courseList
+    }
+
+    fun publishCourse(courseId: Int) {
+        database.update(Course) {
+            set(it.statusId, CourseStatusEnum.USING.id)
+            set(it.modifyTime, LocalDateTime.now())
+            set(it.publishTime, LocalDateTime.now())
+            where {
+                it.id eq courseId
+            }
+        }
+    }
+
+    fun applyCourseWithStudents(courseId: Int, studentIds: List<Int>) {
+        database.batchInsert(StudentCourse) {
+            studentIds.forEach { studentId ->
+                item {
+                    set(it.studentId, studentId)
+                    set(it.courseId, courseId)
+                    set(it.finishedTask, 0)
+                }
+            }
+        }
+    }
+
+    fun loadStatusById(courseId: Int): Int {
+        val status = database.from(Course)
+            .select(Course.statusId)
+            .where(Course.id eq courseId)
+            .map { it[Course.statusId]!! }
+            .firstOrNull() ?: throw Exception("Course not found")
+        return status
     }
 
 }

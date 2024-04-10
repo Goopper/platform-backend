@@ -13,8 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import top.goopper.platform.dao.UserDAO
 import top.goopper.platform.dto.DeviceDTO
-import top.goopper.platform.pojo.JwtSubject
 import top.goopper.platform.dto.UserDTO
+import top.goopper.platform.pojo.JwtSubject
 import java.nio.charset.Charset
 
 @Service
@@ -33,7 +33,7 @@ class UserService(
      * @return jwt token
      * @throws Exception if user does not exist or password is incorrect
      */
-    fun authenticate(number: Long, password: String, userAgentStr: String): String {
+    fun authenticate(number: Int, password: String, userAgentStr: String): String {
         // load user with number
         val fullUserDetails = userDAO.loadFullUserByUserNumber(number)
         val user = fullUserDetails.raw
@@ -64,7 +64,7 @@ class UserService(
      * @throws Exception if user does not exist
      */
     override fun loadUserByUsername(username: String?): UserDetails {
-        val user = userDAO.loadUserByNumber(username?.toLong() ?: 0)
+        val user = userDAO.loadUserByNumber(username?.toInt() ?: 0)
         return User(user.number.toString(), user.number.toString(), listOf(
             GrantedAuthority { user.roleName }
         ))
@@ -85,7 +85,7 @@ class UserService(
      * @return user
      * @throws Exception if user does not exist
      */
-    fun loadUserById(id: Long): UserDTO {
+    fun loadUserById(id: Int): UserDTO {
         val user = userDAO.loadUserById(id)
         return user
     }
@@ -95,7 +95,7 @@ class UserService(
      * @param uid user id
      * @return list of devices
      */
-    fun loadDevice(uid: Long): List<DeviceDTO> {
+    fun loadDevice(uid: Int): List<DeviceDTO> {
         val pattern = "auth:$uid:*"
         val devices = mutableListOf<DeviceDTO>()
         redisTemplate.execute {

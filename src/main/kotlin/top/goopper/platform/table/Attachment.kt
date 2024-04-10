@@ -3,7 +3,7 @@ package top.goopper.platform.table
 import org.ktorm.schema.*
 
 object Attachment : Table<Nothing>("attachment") {
-    val id = long("id").primaryKey()
+    val id = int("id").primaryKey()
     val filename = varchar("filename")
     val originalFilename = varchar("original_filename")
     val url = varchar("url")

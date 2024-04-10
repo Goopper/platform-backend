@@ -3,11 +3,11 @@ package top.goopper.platform.dto.course.create
 import top.goopper.platform.dto.AttachmentDTO
 
 data class CreateCourseDTO(
-    val id: Long?,
+    val id: Int?,
     val name: String,
-    val teacherId: Long,
+    val teacherId: Int,
     var attachments: List<AttachmentDTO>,
-    val typeId: Long,
+    val typeId: Int,
     val desc: String,
     val cover: String,
 )

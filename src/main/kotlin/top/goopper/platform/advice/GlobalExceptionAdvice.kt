@@ -24,7 +24,7 @@ class GlobalExceptionAdvice {
         }
         val realIp = request.getHeader("X-Forwarded-For")
         logger.error("Global exception: ip: $realIp, url: ${request.requestURL}, message: ${e.message}")
-        return ResponseEntity.status(500).body(Response.error(500, e.message ?: "Unknown error"))
+        return ResponseEntity.status(400).body(Response.error(400, e.message ?: "Unknown error"))
     }
 
 }

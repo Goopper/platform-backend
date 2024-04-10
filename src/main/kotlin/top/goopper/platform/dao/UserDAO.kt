@@ -2,58 +2,96 @@ package top.goopper.platform.dao
 
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
-import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.stereotype.Repository
 import top.goopper.platform.dto.UserDTO
-import top.goopper.platform.table.*
 import top.goopper.platform.pojo.UserFullDetails
-import top.goopper.platform.utils.DTOUtils.Companion.processUserDTO
-import top.goopper.platform.utils.DTOUtils.Companion.processUserDTOByRows
+import top.goopper.platform.table.Group
+import top.goopper.platform.table.Role
+import top.goopper.platform.table.User
 
-@Component
+// TODO: optimize the code
+@Repository
 class UserDAO(private val database: Database) {
 
-    fun loadFullUserByUserNumber(number: Long): UserFullDetails {
-        val rows = database.from(User)
+    fun loadFullUserByUserNumber(number: Int): UserFullDetails {
+        val result = database.from(User)
             .innerJoin(Role, User.roleId eq Role.id)
-            .innerJoin(Group, User.groupId eq Group.id)
+            .leftJoin(Group, User.groupId eq Group.id)
             .select()
             .where {
                 User.number eq number
-            }.iterator()
-        if (!rows.hasNext())
-            throw Exception("User not found")
-        val row = rows.next()
-        return UserFullDetails(
-            raw = processUserDTO(row),
-            encodedPassword = row[User.password]!!
-        )
+            }
+            .map {
+                UserFullDetails(
+                    raw = UserDTO(
+                        id = it[User.id]!!,
+                        number = it[User.number]!!,
+                        name = it[User.name]!!,
+                        roleId = it[User.roleId]!!,
+                        roleName = it[Role.name]!!,
+                        groupId = it[User.groupId],
+                        groupName = it[Group.name],
+                        email = it[User.email]!!,
+                        avatar = it[User.avatar]!!,
+                        sex = it[User.sex]!!
+                    ),
+                    encodedPassword = it[User.password]!!
+                )
+            }.firstOrNull() ?: throw Exception("User not found")
+        return result
     }
 
-    fun loadUserByNumber(number: Long): UserDTO {
-        val rows = database.from(User)
+    fun loadUserByNumber(number: Int): UserDTO {
+        val result = database.from(User)
             .innerJoin(Role, User.roleId eq Role.id)
-            .innerJoin(Group, User.groupId eq Group.id)
+            .leftJoin(Group, User.groupId eq Group.id)
             .select()
             .where {
                 User.number eq number
-            }.iterator()
-        return processUserDTOByRows(rows)
+            }
+            .map {
+                UserDTO(
+                    id = it[User.id]!!,
+                    number = it[User.number]!!,
+                    name = it[User.name]!!,
+                    roleId = it[User.roleId]!!,
+                    roleName = it[Role.name]!!,
+                    groupId = it[User.groupId],
+                    groupName = it[Group.name],
+                    email = it[User.email]!!,
+                    avatar = it[User.avatar]!!,
+                    sex = it[User.sex]!!
+                )
+            }.firstOrNull() ?: throw Exception("User not found")
+        return result
     }
 
-    fun loadUserById(id: Long): UserDTO {
-        val rows = database.from(User)
+    fun loadUserById(id: Int): UserDTO {
+        val result = database.from(User)
             .innerJoin(Role, User.roleId eq Role.id)
-            .innerJoin(Group, User.groupId eq Group.id)
+            .leftJoin(Group, User.groupId eq Group.id)
             .select()
             .where {
                 User.id eq id
-            }.iterator()
-        return processUserDTOByRows(rows)
+            }
+            .map {
+                UserDTO(
+                    id = it[User.id]!!,
+                    number = it[User.number]!!,
+                    name = it[User.name]!!,
+                    roleId = it[User.roleId]!!,
+                    roleName = it[Role.name]!!,
+                    groupId = it[User.groupId],
+                    groupName = it[Group.name],
+                    email = it[User.email]!!,
+                    avatar = it[User.avatar]!!,
+                    sex = it[User.sex]!!
+                )
+            }.firstOrNull() ?: throw Exception("User not found")
+        return result
     }
 
-    @Transactional(rollbackFor = [Exception::class])
-    fun updateEmail(id: Long, new: String) {
+    fun updateEmail(id: Int, new: String) {
         database.update(User) {
             set(User.email, new)
             where {
@@ -62,8 +100,7 @@ class UserDAO(private val database: Database) {
         }
     }
 
-    @Transactional(rollbackFor = [Exception::class])
-    fun updatePassword(id: Long, encode: String?) {
+    fun updatePassword(id: Int, encode: String?) {
         database.update(User) {
             set(User.password, encode)
             where {

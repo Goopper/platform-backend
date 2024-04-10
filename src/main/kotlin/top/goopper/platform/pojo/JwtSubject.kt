@@ -1,8 +1,8 @@
 package top.goopper.platform.pojo
 
 data class JwtSubject(
-    val uid: Long,
-    val number: Long,
+    val uid: Int,
+    val number: Int,
     val name: String,
     val roleName: String,
     val browserName: String,
