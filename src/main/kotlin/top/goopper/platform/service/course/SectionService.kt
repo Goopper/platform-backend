@@ -2,8 +2,8 @@ package top.goopper.platform.service.course
 
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
-import top.goopper.platform.dao.course.SectionDAO
-import top.goopper.platform.dao.course.TaskDAO
+import top.goopper.platform.dao.section.SectionDAO
+import top.goopper.platform.dao.task.TaskDAO
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.dto.course.create.CreateSectionDTO
 import top.goopper.platform.dto.course.detail.SectionDetailDTO
@@ -19,7 +19,7 @@ class SectionService(
         sectionDAO.createSection(section)
     }
 
-    fun getCreationInfo(sectionId: Long): CreateSectionDTO {
+    fun getCreationInfo(sectionId: Int): CreateSectionDTO {
         val creationInfo = sectionDAO.loadSectionCreationInfo(sectionId)
         return creationInfo
     }
@@ -32,7 +32,7 @@ class SectionService(
      * Delete section and all tasks in it
      * Course total_task will be auto decremented by trigger in database `section_delete_trigger`
      */
-    fun deleteSection(sectionId: Long) {
+    fun deleteSection(sectionId: Int) {
         sectionDAO.removeSection(sectionId)
     }
 
@@ -41,7 +41,7 @@ class SectionService(
      * If current user is student, only return tasks and task status of current user
      * If current user is teacher, return all tasks
      */
-    fun getSectionDetail(sectionId: Long): SectionDetailDTO {
+    fun getSectionDetail(sectionId: Int): SectionDetailDTO {
         val section = sectionDAO.loadSectionDetail(sectionId)
         val auth = SecurityContextHolder.getContext().authentication
         val role = auth.authorities.first().authority

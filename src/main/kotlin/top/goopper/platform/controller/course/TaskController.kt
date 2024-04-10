@@ -2,17 +2,10 @@ package top.goopper.platform.controller.course
 
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import top.goopper.platform.dto.course.create.CreateTaskDTO
 import top.goopper.platform.pojo.Response
-import top.goopper.platform.service.course.TaskService
+import top.goopper.platform.service.TaskService
 
 @RestController
 @RequestMapping("/task")
@@ -24,7 +17,7 @@ class TaskController(
     @PostMapping("/{sectionId}")
     fun createTask(
         @RequestBody createTaskDTO: CreateTaskDTO,
-        @PathVariable sectionId: Long
+        @PathVariable sectionId: Int
     ): ResponseEntity<Response> {
         createTaskDTO.sectionId = sectionId
         taskService.createNewTask(createTaskDTO)
@@ -34,7 +27,7 @@ class TaskController(
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @GetMapping("/creation/{taskId}")
     fun loadTaskCreationInfo(
-        @PathVariable taskId: Long
+        @PathVariable taskId: Int
     ): ResponseEntity<Response> {
         val taskCreationInfo = taskService.loadTaskCreationInfo(taskId)
         return ResponseEntity.ok(Response.success(taskCreationInfo))
@@ -52,15 +45,18 @@ class TaskController(
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @DeleteMapping("/{taskId}")
     fun deleteTask(
-        @PathVariable taskId: Long
+        @PathVariable taskId: Int
     ): ResponseEntity<Response> {
         taskService.deleteTask(taskId)
         return ResponseEntity.ok(Response.success())
     }
 
+    /**
+     * 获取任务具体信息
+     */
     @GetMapping("/{taskId}")
     fun getTaskDetail(
-        @PathVariable taskId: Long
+        @PathVariable taskId: Int
     ): ResponseEntity<Response> {
         val taskDetail = taskService.getTaskDetail(taskId)
         return ResponseEntity.ok(Response.success(taskDetail))

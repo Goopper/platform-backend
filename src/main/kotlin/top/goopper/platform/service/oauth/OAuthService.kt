@@ -6,11 +6,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
-import top.goopper.platform.dao.OAuthDAO
-import top.goopper.platform.dao.ProviderDAO
+import top.goopper.platform.dao.oauth.OAuthDAO
+import top.goopper.platform.dao.oauth.ProviderDAO
 import top.goopper.platform.dto.OAuthDTO
-import top.goopper.platform.pojo.JwtSubject
 import top.goopper.platform.dto.UserDTO
+import top.goopper.platform.pojo.JwtSubject
 import top.goopper.platform.service.JwtTokenService
 
 @Service

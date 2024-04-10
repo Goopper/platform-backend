@@ -3,16 +3,11 @@ package top.goopper.platform.controller.user
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.pojo.Response
-import top.goopper.platform.service.oauth.OAuthService
 import top.goopper.platform.service.UserService
+import top.goopper.platform.service.oauth.OAuthService
 
 @RestController
 @RequestMapping("/user")
@@ -38,7 +33,7 @@ class UserController(
 
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @GetMapping("/{id}")
-    fun info(@PathVariable id: Long): ResponseEntity<Response> {
+    fun info(@PathVariable id: Int): ResponseEntity<Response> {
         val user = userService.loadUserById(id)
         return ResponseEntity.ok(Response.success(user))
     }

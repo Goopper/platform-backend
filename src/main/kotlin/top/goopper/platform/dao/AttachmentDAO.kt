@@ -2,24 +2,27 @@ package top.goopper.platform.dao
 
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dto.AttachmentDTO
-import top.goopper.platform.table.*
+import top.goopper.platform.table.Attachment
+import top.goopper.platform.table.answer.AnswerAttachment
+import top.goopper.platform.table.course.CourseAttachment
+import top.goopper.platform.table.task.TaskAttachment
 
-@Component
+@Repository
 class AttachmentDAO(private val database: Database) {
 
     // create attachment and return the id
-    fun createAttachment(attachmentDTO: AttachmentDTO): Long {
+    fun createAttachment(dto: AttachmentDTO): Int {
         val id = database.insertAndGenerateKey(Attachment) {
-            set(it.filename, attachmentDTO.filename)
-            set(it.originalFilename, attachmentDTO.originalFilename)
-            set(it.url, attachmentDTO.url)
-            set(it.size, attachmentDTO.size)
-            set(it.type, attachmentDTO.type)
-            set(it.contentMD5, attachmentDTO.md5)
-        } as Long
+            set(it.filename, dto.filename)
+            set(it.originalFilename, dto.originalFilename)
+            set(it.url, dto.url)
+            set(it.size, dto.size)
+            set(it.type, dto.type)
+            set(it.contentMD5, dto.md5)
+        } as Int
         return id
     }
 
@@ -49,7 +52,7 @@ class AttachmentDAO(private val database: Database) {
         val query = database.from(Attachment)
             .leftJoin(CourseAttachment, CourseAttachment.attachmentId eq Attachment.id)
             .leftJoin(TaskAttachment, TaskAttachment.attachmentId eq Attachment.id)
-            .leftJoin(StudentTaskAttachment, StudentTaskAttachment.attachmentId eq Attachment.id)
+            .leftJoin(AnswerAttachment, AnswerAttachment.attachmentId eq Attachment.id)
             .select()
             .where { CourseAttachment.attachmentId.isNull() }
         database.delete(Attachment) {
@@ -58,7 +61,7 @@ class AttachmentDAO(private val database: Database) {
         return query.map { it[Attachment.filename]!! }
     }
 
-    fun loadCourseAttachments(courseId: Long): List<AttachmentDTO> {
+    fun loadCourseAttachments(courseId: Int): List<AttachmentDTO> {
         val attachments = database.from(Attachment)
             .innerJoin(CourseAttachment, CourseAttachment.attachmentId eq Attachment.id)
             .select()
@@ -77,7 +80,7 @@ class AttachmentDAO(private val database: Database) {
         return attachments
     }
 
-    fun loadTaskAttachments(taskId: Long): List<AttachmentDTO> {
+    fun loadTaskAttachments(taskId: Int): List<AttachmentDTO> {
         val attachments = database.from(TaskAttachment)
             .innerJoin(Attachment, Attachment.id eq TaskAttachment.attachmentId)
             .select()
@@ -93,6 +96,26 @@ class AttachmentDAO(private val database: Database) {
                     md5 = it[Attachment.contentMD5]!!
                 )
             }
+        return attachments
+    }
+
+    fun loadAnswerAttachments(id: Int): List<AttachmentDTO> {
+        val attachments = database.from(AnswerAttachment)
+            .innerJoin(Attachment, Attachment.id eq AnswerAttachment.attachmentId)
+            .select()
+            .where(AnswerAttachment.answerId eq id)
+            .map {
+                AttachmentDTO(
+                    id = it[Attachment.id]!!,
+                    filename = it[Attachment.filename]!!,
+                    url = it[Attachment.url]!!,
+                    type = it[Attachment.type]!!,
+                    size = it[Attachment.size]!!,
+                    originalFilename = it[Attachment.originalFilename]!!,
+                    md5 = it[Attachment.contentMD5]!!
+                )
+            }
+
         return attachments
     }
 

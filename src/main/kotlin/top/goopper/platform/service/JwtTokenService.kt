@@ -36,6 +36,7 @@ class JwtTokenService(
     private val secretKey = "50b989ddef493a58ee52e05d9110c9d8b0604dd16e9e3660fecd40cfd0feabd9"
     // 1h
     private val validityInMilliseconds: Long = 3600000
+    private val validator = Jwts.parser().verifyWith(hmacShaKeyFor(secretKey.toByteArray())).build()
 
     /**
      * Create token
@@ -134,8 +135,7 @@ class JwtTokenService(
      * @param token jwt token
      */
     fun getPayload(token: String): Claims {
-        val subject = Jwts.parser().verifyWith(hmacShaKeyFor(secretKey.toByteArray())).build()
-            .parseSignedClaims(token).payload
+        val subject = validator.parseSignedClaims(token).payload
         return subject
     }
 
@@ -143,7 +143,7 @@ class JwtTokenService(
      * When important security info changes
      * Revoke all tokens by user id, clear the user's login status
      */
-    fun revokeAllTokensByUserId(id: Long) {
+    fun revokeAllTokensByUserId(id: Int) {
         redisTemplate.execute {
             val pattern = "auth:$id:*"
             val keys = it.keyCommands().keys(pattern.toByteArray()).orEmpty().toTypedArray()

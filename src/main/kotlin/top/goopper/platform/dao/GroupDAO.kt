@@ -2,14 +2,14 @@ package top.goopper.platform.dao
 
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import top.goopper.platform.dto.GroupDTO
 import top.goopper.platform.table.Group
 
-@Component
+@Repository
 class GroupDAO(private val database: Database) {
 
-    fun getByTeacherId(id: Long): List<GroupDTO> {
+    fun getByTeacherId(id: Int): List<GroupDTO> {
         val groups = database.from(Group)
             .select()
             .where {

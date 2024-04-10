@@ -1,14 +1,14 @@
 package top.goopper.platform.dto
 
 data class UserDTO(
-    val id: Long,
+    val id: Int,
     val name: String,
     val email: String,
     val avatar: String,
     val sex: Boolean,
-    val number: Long,
-    val roleId: Long,
-    val groupId: Long,
+    val number: Int,
+    val roleId: Int,
+    val groupId: Int?,
     val roleName: String,
-    val groupName: String,
+    val groupName: String?,
 )
