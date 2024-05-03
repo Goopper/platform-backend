@@ -36,11 +36,6 @@ class MessageService(
         return userMessageId
     }
 
-    // send messages to all users
-    fun sendToAll(message: MessageDTO) {
-
-    }
-
     // receive one message
     fun receiveOne(id: Int) {
         userMessageDAO.readOne(id)

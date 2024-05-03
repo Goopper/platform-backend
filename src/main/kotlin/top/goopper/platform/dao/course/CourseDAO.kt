@@ -186,7 +186,7 @@ class CourseDAO(
                     name = it[CourseType.name]!!
                 )
             }
-        return typeList;
+        return typeList
     }
 
     fun checkCourseTypeExists(typeName: String): Boolean {

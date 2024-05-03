@@ -182,7 +182,7 @@ class UserService(
 
     fun updateAvatar(url: String) {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        userDAO.updateAvatar(user.id, url);
+        userDAO.updateAvatar(user.id, url)
     }
 
     fun updateStudentPassword(password: String, uid: Int) {
