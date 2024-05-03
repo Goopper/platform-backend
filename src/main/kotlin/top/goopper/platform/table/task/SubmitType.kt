@@ -1,15 +1,13 @@
-package top.goopper.platform.table.course
+package top.goopper.platform.table.task
 
 import org.ktorm.schema.Table
 import org.ktorm.schema.datetime
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
 
-object CourseStatus: Table<Nothing>("course_status") {
-
+object SubmitType : Table<Nothing>("submit_type") {
     val id = int("id").primaryKey()
-    val name = varchar("name")
     val text = varchar("text")
+    val name = varchar("name")
     val createTime = datetime("create_time")
-
 }

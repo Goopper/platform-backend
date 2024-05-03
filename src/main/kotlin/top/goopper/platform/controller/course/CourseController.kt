@@ -21,8 +21,8 @@ class CourseController(
     fun createNewCourse(
         @RequestBody course: CreateCourseDTO
     ): ResponseEntity<Response> {
-        courseService.createNewCourse(course)
-        return ResponseEntity.ok(Response.success())
+        val courseId = courseService.createNewCourse(course)
+        return ResponseEntity.ok(Response.success(courseId))
     }
 
     /**
@@ -62,6 +62,30 @@ class CourseController(
     }
 
     /**
+     * 停用课程
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @DeleteMapping("/disable/{courseId}")
+    fun disableCourse(
+        @PathVariable courseId: Int
+    ): ResponseEntity<Response> {
+        courseService.disableCourse(courseId)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    /**
+     * 启用课程
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PostMapping("/enable/{courseId}")
+    fun enableCourse(
+        @PathVariable courseId: Int
+    ): ResponseEntity<Response> {
+        courseService.enableCourse(courseId)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    /**
      * 获取课程详情信息
      */
     @GetMapping("/{courseId}")
@@ -88,8 +112,11 @@ class CourseController(
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @GetMapping
-    fun teacherGetCourseList(): ResponseEntity<Response> {
-        val courseList = courseService.teacherGetCourseList()
+    fun teacherGetCourseList(
+        @RequestParam("statusId") statusId: Int? = null,
+        @RequestParam("name") name: String = ""
+    ): ResponseEntity<Response> {
+        val courseList = courseService.teacherGetCourseList(statusId, name)
         return ResponseEntity.ok(Response.success(courseList))
     }
 
@@ -103,6 +130,9 @@ class CourseController(
         return ResponseEntity.ok(Response.success())
     }
 
+    /**
+     * 应用课程至指定学生小组
+     */
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @PostMapping("/apply/{courseId}")
     fun applyCourseWithStudentInGroups(
@@ -124,6 +154,56 @@ class CourseController(
         // 学生选课
         courseService.manualSelectCourse(courseId)
         return ResponseEntity.ok(Response.success())
+    }
+
+    @GetMapping("/type")
+    fun getCourseTypeList(): ResponseEntity<Response> {
+        val types = courseService.getCourseTypes()
+        return ResponseEntity.ok(Response.success(types))
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PostMapping("/type")
+    fun createCourseType(@RequestParam typeName: String): ResponseEntity<Response> {
+        courseService.createCourseType(typeName)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @DeleteMapping("/type")
+    fun deleteCourseType(@RequestParam typeId: Int): ResponseEntity<Response> {
+        courseService.deleteCourseType(typeId)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    /**
+     * 克隆指定id的课程
+     */
+    @PostMapping("/copy")
+    fun copyCourse(@RequestParam courseId: Int): ResponseEntity<Response> {
+        courseService.copyCourse(courseId)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    /**
+     * 删除课程附件
+     */
+    @DeleteMapping("/attachment")
+    fun deleteCourseAttachment(
+        @RequestParam attachmentId: Int,
+        @RequestParam courseId: Int
+    ): ResponseEntity<Response> {
+        courseService.deleteCourseAttachment(courseId, attachmentId)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    /**
+     * 获取课程状态列表
+     */
+    @GetMapping("/status")
+    fun getCourseType(): ResponseEntity<Response> {
+        val status = courseService.getCourseStatus()
+        return ResponseEntity.ok(Response.success(status))
     }
 
 }

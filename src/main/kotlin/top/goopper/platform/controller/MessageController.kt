@@ -31,4 +31,10 @@ class MessageController(
         return ResponseEntity.ok(Response.success())
     }
 
+    @GetMapping("/type")
+    fun types(): ResponseEntity<Response> {
+        val types = messageService.getTypes()
+        return ResponseEntity.ok(Response.success(types))
+    }
+
 }

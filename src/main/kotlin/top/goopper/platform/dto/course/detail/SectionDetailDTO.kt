@@ -1,6 +1,6 @@
 package top.goopper.platform.dto.course.detail
 
-import top.goopper.platform.dto.course.TaskDTO
+import top.goopper.platform.dto.course.task.TaskDTO
 
 data class SectionDetailDTO(
     val id: Int,

@@ -6,4 +6,5 @@ data class CourseDTO(
     val cover: String,
     val type: String,
     val desc: String,
+    val status: String
 )

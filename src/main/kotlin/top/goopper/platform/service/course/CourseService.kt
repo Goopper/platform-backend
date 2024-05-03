@@ -1,5 +1,6 @@
 package top.goopper.platform.service.course
 
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -10,6 +11,8 @@ import top.goopper.platform.dao.section.SectionDAO
 import top.goopper.platform.dao.student.StudentDAO
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.dto.course.CourseDTO
+import top.goopper.platform.dto.course.CourseStatusDTO
+import top.goopper.platform.dto.course.CourseTypeDTO
 import top.goopper.platform.dto.course.SectionDTO
 import top.goopper.platform.dto.course.create.CreateCourseDTO
 import top.goopper.platform.dto.course.detail.CourseDetailDTO
@@ -29,14 +32,20 @@ class CourseService(
      * @param course course info
      */
     @Transactional(rollbackFor = [Exception::class])
-    fun createNewCourse(course: CreateCourseDTO) {
+    fun createNewCourse(course: CreateCourseDTO): Int {
         // create attachment and fill the id
         attachmentDAO.batchCreateAttachment(course.attachments)
         // create course
-        val courseId = courseDAO.createCourse(course)
-        if (course.attachments.isEmpty()) return
-        // create relation between course and attachment
-        courseAttachmentDAO.batchInsertCourseAttachment(courseId, course.attachments.map { it.id!! })
+        try {
+            val courseId = courseDAO.createCourse(course)
+            if (course.attachments.isEmpty()) return courseId
+            // create relation between course and attachment
+            courseAttachmentDAO.batchInsertCourseAttachment(courseId, course.attachments.map { it.id!! })
+            return courseId
+        } catch (e: DataIntegrityViolationException) {
+            e.printStackTrace()
+            throw Exception("Course type or teacher not exists")
+        }
     }
 
     fun getCreationInfo(courseId: Int): CreateCourseDTO {
@@ -80,9 +89,9 @@ class CourseService(
         return sections
     }
 
-    fun teacherGetCourseList(): List<CourseDTO> {
+    fun teacherGetCourseList(statusId: Int?, name: String): List<CourseDTO> {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val courseList = courseDAO.loadTeacherCourseList(user.id)
+        val courseList = courseDAO.loadTeacherCourseList(user.id, statusId, name)
         return courseList
     }
 
@@ -122,6 +131,71 @@ class CourseService(
         }
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
         courseDAO.applyCourseWithStudents(courseId, listOf(user.id))
+    }
+
+    fun disableCourse(courseId: Int) {
+        val statusId = courseDAO.loadStatusById(courseId)
+        if (statusId != CourseStatusEnum.USING.id) {
+            throw Exception("Course is not published")
+        }
+        courseDAO.disableCourse(courseId)
+    }
+
+    fun enableCourse(courseId: Int) {
+        val statusId = courseDAO.loadStatusById(courseId)
+        if (statusId != CourseStatusEnum.DEACTIVATED.id) {
+            throw Exception("Course is not disabled")
+        }
+        courseDAO.enableCourse(courseId)
+    }
+
+    fun getCourseTypes(): List<CourseTypeDTO> {
+        val result = courseDAO.getCourseTypes()
+        return result
+    }
+
+    /**
+     * 创建课程类型
+     *
+     * @param typeName 课程类型名称
+     * @throws Exception 课程类型已存在
+     */
+    fun createCourseType(typeName: String) {
+        val exists = courseDAO.checkCourseTypeExists(typeName)
+        if (exists) {
+            throw Exception("Course type exists")
+        }
+        courseDAO.createCourseType(typeName)
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun copyCourse(courseId: Int) {
+        val course = courseDAO.loadCourseCopyInfo(courseId)
+        if (course.statusId == CourseStatusEnum.USING.id) {
+            throw Exception("Course is using")
+        }
+        course.name += " - 副本"
+        val attachments = attachmentDAO.loadCourseAttachments(courseId)
+        attachmentDAO.batchCreateAttachment(attachments)
+        course.attachments = attachments
+        // create course
+        val newCourseId = courseDAO.createCourse(course)
+        if (course.attachments.isEmpty()) return
+        // create relation between course and attachment
+        courseAttachmentDAO.batchInsertCourseAttachment(newCourseId, course.attachments.map { it.id!! })
+    }
+
+    fun deleteCourseType(typeId: Int) {
+        courseDAO.deleteCourseType(typeId)
+    }
+
+    fun deleteCourseAttachment(courseId: Int, attachmentId: Int) {
+        courseAttachmentDAO.deleteCourseAttachment(courseId, attachmentId)
+    }
+
+    fun getCourseStatus(): List<CourseStatusDTO> {
+        val status = courseDAO.getCourseStatus()
+        return status
     }
 
 }

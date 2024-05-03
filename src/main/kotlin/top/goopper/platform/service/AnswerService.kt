@@ -12,6 +12,7 @@ import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.dto.answer.AnswerDTO
 import top.goopper.platform.dto.answer.CorrectAnswerDTO
 import top.goopper.platform.dto.answer.SubmitAnswerDTO
+import top.goopper.platform.dto.answer.SubmitInfoDTO
 import top.goopper.platform.dto.message.MessageDTO
 import top.goopper.platform.enum.MessageTypeEnum
 import top.goopper.platform.enum.TaskSubmitTypeEnum
@@ -33,11 +34,12 @@ class AnswerService(
     // TODO: optimize execution time
     @Transactional(rollbackFor = [Exception::class])
     fun submitTask(dto: SubmitAnswerDTO, uid: Int) {
-        when (dto.typeId) {
+        val info: SubmitInfoDTO = answerDAO.getSubmitInfo(dto, uid)
+        when (info.submitTypeId) {
             TaskSubmitTypeEnum.NO_NEED.id -> {
                 // create answer without send a message
                 try {
-                    answerDAO.createAnswer(dto, uid, null)
+                    answerDAO.createAnswer(dto, info)
                 } catch (e: DuplicateKeyException) {
                     throw Exception("You have already submitted this task")
                 }
@@ -45,21 +47,22 @@ class AnswerService(
             TaskSubmitTypeEnum.COMMON_ONLY.id -> {
                 val message = MessageDTO(
                     title = messageUtils.correctTitle,
-                    content = messageUtils.buildAnswerCorrectRequestMessageContent(dto.taskName),
+                    content = messageUtils.buildAnswerCorrectRequestMessageContent(info.taskName),
                     typeId = MessageTypeEnum.REQUIRE_CORRECT.id,
                     senderId = uid,
-                    receiverId = dto.teacherId,
+                    receiverId = info.teacherId,
                 )
                 // send message to course teacher
                 val messageId = messageService.send(message)
                 // create answer
                 try {
-                    val answerId = answerDAO.createAnswer(dto, uid, messageId)
-                    if (dto.attachments.isNotEmpty()) {
+                    val answerId = answerDAO.createAnswer(dto, info, messageId)
+                    val attachment = dto.attachments
+                    if (attachment.isNotEmpty()) {
                         // add attachment
-                        attachmentDAO.batchCreateAttachment(dto.attachments)
+                        attachmentDAO.batchCreateAttachment(attachment)
                         // add attachment to answer
-                        answerAttachmentDAO.batchCreateAnswerAttachment(dto.attachments, answerId)
+                        answerAttachmentDAO.batchCreateAnswerAttachment(attachment, answerId)
                     }
                 } catch (e: DuplicateKeyException) {
                     throw Exception("You have already submitted this task")
@@ -73,10 +76,10 @@ class AnswerService(
         // course finished task count +1 with mysql trigger `task_submit_trigger`
         redisTemplate.execute {
             // set latest learned info to redis
-            val currentKey = redisUtils.buildLatestLearnedKey(uid, dto.courseId)
+            val currentKey = redisUtils.buildLatestLearnedKey(uid, info.courseId)
             val fieldValues = mapOf(
-                redisUtils.LATEST_LEARNED_SECTION to dto.sectionName.toByteArray(),
-                redisUtils.LATEST_LEARNED_TASK to dto.taskName.toByteArray(),
+                redisUtils.LATEST_LEARNED_SECTION to info.sectionName.toByteArray(),
+                redisUtils.LATEST_LEARNED_TASK to info.taskName.toByteArray(),
                 redisUtils.LATEST_LEARNED_DATE to LocalDateTime.now().toString().toByteArray()
             )
             it.hashCommands()
@@ -112,7 +115,11 @@ class AnswerService(
 
     fun getSubmittedAnswer(messageId: Int): AnswerDTO {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val answer = answerDAO.getAnswerByMessageId(user.id, messageId)
+        val answer = try {
+            answerDAO.getAnswerByMessageId(user.id, messageId)
+        } catch (e: Exception) {
+            throw Exception("No answer found")
+        }
         val attachments = attachmentDAO.loadAnswerAttachments(answer.answerId)
         answer.attachments = attachments
         return answer

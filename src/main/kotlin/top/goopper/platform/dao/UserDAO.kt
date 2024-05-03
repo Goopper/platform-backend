@@ -109,4 +109,13 @@ class UserDAO(private val database: Database) {
         }
     }
 
+    fun updateAvatar(id: Int, url: String) {
+        database.update(User) {
+            set(User.avatar, url)
+            where {
+                User.id eq id
+            }
+        }
+    }
+
 }

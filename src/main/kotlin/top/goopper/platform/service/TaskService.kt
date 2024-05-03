@@ -8,6 +8,7 @@ import top.goopper.platform.dao.task.TaskAttachmentDAO
 import top.goopper.platform.dao.task.TaskDAO
 import top.goopper.platform.dto.course.create.CreateTaskDTO
 import top.goopper.platform.dto.course.detail.TaskDetailDTO
+import top.goopper.platform.dto.course.task.SubmitTypeListDTO
 import top.goopper.platform.enum.RoleEnum
 
 @Service
@@ -81,6 +82,15 @@ class TaskService(
         }
         task.attachment = attachmentDAO.loadTaskAttachments(taskId)
         return task
+    }
+
+    fun deleteTaskAttachment(taskId: Int, attachmentId: Int) {
+        taskAttachmentDAO.deleteTaskAttachment(taskId, attachmentId)
+    }
+
+    fun getSubmitTypeList(): List<SubmitTypeListDTO> {
+        val types = taskDAO.loadSubmitTypeList()
+        return types
     }
 
 }

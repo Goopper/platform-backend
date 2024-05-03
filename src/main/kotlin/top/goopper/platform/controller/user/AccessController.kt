@@ -2,10 +2,7 @@ package top.goopper.platform.controller.user
 
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import top.goopper.platform.config.SecurityConfig.Companion.AUTHORIZATION_HEADER
 import top.goopper.platform.pojo.Response
 import top.goopper.platform.service.UserService
@@ -42,6 +39,17 @@ class AccessController(
     fun logout(request: HttpServletRequest): ResponseEntity<Response> {
         val token = request.getHeader(AUTHORIZATION_HEADER)
         userService.logout(token)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    /**
+     * 登出指定设备
+     *
+     * @param tokenId 设备id（jwt的hash）
+     */
+    @DeleteMapping("/logout")
+    fun logout(tokenId: Int): ResponseEntity<Response> {
+        userService.logout(tokenId)
         return ResponseEntity.ok(Response.success())
     }
 }

@@ -29,9 +29,9 @@ class StudentService(
     /**
      * Get current learning course list for student
      */
-    fun getCurrentLearningCourseList(): List<StudentLearningProgressDTO> {
+    fun getCurrentLearningCourseList(typeId: Int?, name: String): List<StudentLearningProgressDTO> {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val result = studentDAO.getAllLearningProgress(user.id)
+        val result = studentDAO.getAllLearningProgress(user.id, typeId, name)
         redisTemplate.execute {
             for (dto in result) {
                 fillProgressDetail2ProgressDTO(user.id, dto, it)
@@ -43,9 +43,9 @@ class StudentService(
     /**
      * Get available course list for student
      */
-    fun getAvailableCourse(): List<CourseDTO> {
+    fun getAvailableCourse(typeId: Int?, name: String): List<CourseDTO> {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val courses = studentDAO.getAvailableCourse(user.id)
+        val courses = studentDAO.getAvailableCourse(user.id, typeId, name)
         return courses
     }
 

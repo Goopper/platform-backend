@@ -32,7 +32,7 @@ class StatisticController(
                 studentName = studentName,
                 groupId = groupId,
                 courseTypeId = courseTypeId,
-                page = page
+                page = page ?: 1
             )
         )
         return ResponseEntity.ok(Response.success(performance))

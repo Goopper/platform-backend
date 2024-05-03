@@ -5,6 +5,7 @@ import org.ktorm.dsl.*
 import org.springframework.stereotype.Repository
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.dto.message.MessageListDTO
+import top.goopper.platform.dto.message.MessagePageDTO
 import top.goopper.platform.dto.message.MessageQueryDTO
 import top.goopper.platform.dto.message.UserMessageDTO
 import top.goopper.platform.table.User
@@ -26,8 +27,8 @@ class UserMessageDAO(private val database: Database) {
         return id
     }
 
-    fun getMessages(uid: Int, dto: MessageQueryDTO, size: Int): List<MessageListDTO> {
-        val messages = database.from(UserMessage)
+    fun getMessages(uid: Int, dto: MessageQueryDTO, size: Int): MessagePageDTO {
+        val query = database.from(UserMessage)
             .leftJoin(User, User.id eq UserMessage.senderId)
             .innerJoin(Message, Message.id eq UserMessage.messageId)
             .select()
@@ -38,29 +39,36 @@ class UserMessageDAO(private val database: Database) {
             }
             .limit((dto.page - 1) * size, size)
             .orderBy(UserMessage.createTime.desc())
-            .map {
-                MessageListDTO(
-                    id = it[UserMessage.id]!!,
-                    title = it[Message.title]!!,
-                    content = it[Message.content]!!,
-                    typeId = it[Message.typeId]!!,
-                    sender = UserDTO(
-                        id = it[UserMessage.senderId]!!,
-                        name = it[User.name]!!,
-                        avatar = it[User.avatar]!!,
-                        email = it[User.email]!!,
-                        sex = it[User.sex]!!,
-                        number = it[User.number]!!,
-                        roleId = -1,
-                        roleName = "",
-                        groupId = -1,
-                        groupName = ""
-                    ),
-                    date = it[UserMessage.createTime]!!,
-                    isRead = it[UserMessage.readTime] != null
-                )
-            }
-        return messages
+        val messages = query.map {
+            MessageListDTO(
+                id = it[UserMessage.id]!!,
+                title = it[Message.title]!!,
+                content = it[Message.content]!!,
+                typeId = it[Message.typeId]!!,
+                sender = UserDTO(
+                    id = it[UserMessage.senderId]!!,
+                    name = it[User.name]!!,
+                    avatar = it[User.avatar]!!,
+                    email = it[User.email]!!,
+                    sex = it[User.sex]!!,
+                    number = it[User.number]!!,
+                    roleId = -1,
+                    roleName = "",
+                    groupId = -1,
+                    groupName = ""
+                ),
+                date = it[UserMessage.createTime]!!,
+                isRead = it[UserMessage.readTime] != null
+            )
+        }
+        val total = query.totalRecordsInAllPages
+        val totalPage = total / size + if (total % size == 0) 0 else 1
+        return MessagePageDTO(
+            page = dto.page,
+            total = total,
+            totalPage = totalPage,
+            list = messages
+        )
     }
 
     fun readOne(id: Int) {

@@ -1,1 +1,1 @@
-rootProject.name = "private-template"
+rootProject.name = "platform-backend"

@@ -62,4 +62,25 @@ class TaskController(
         return ResponseEntity.ok(Response.success(taskDetail))
     }
 
+    /**
+     * 删除任务附件
+     */
+    @DeleteMapping("/attachment")
+    fun deleteTaskAttachment(
+        @RequestParam attachmentId: Int,
+        @RequestParam taskId: Int
+    ): ResponseEntity<Response> {
+        taskService.deleteTaskAttachment(taskId, attachmentId)
+        return ResponseEntity.ok(Response.success())
+    }
+
+    /**
+     * 获取提交方式列表
+     */
+    @GetMapping("/submit/type")
+    fun getSubmitTypeList(): ResponseEntity<Response> {
+        val submitTypeList = taskService.getSubmitTypeList()
+        return ResponseEntity.ok(Response.success(submitTypeList))
+    }
+
 }

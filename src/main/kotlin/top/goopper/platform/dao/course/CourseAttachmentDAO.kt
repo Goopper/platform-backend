@@ -2,6 +2,8 @@ package top.goopper.platform.dao.course
 
 import org.ktorm.database.Database
 import org.ktorm.dsl.batchInsert
+import org.ktorm.dsl.delete
+import org.ktorm.dsl.eq
 import org.springframework.stereotype.Repository
 import top.goopper.platform.table.course.CourseAttachment
 
@@ -19,6 +21,13 @@ class CourseAttachmentDAO(
                     set(it.attachmentId, attachmentId)
                 }
             }
+        }
+    }
+
+    fun deleteCourseAttachment(courseId: Int, attachmentId: Int) {
+        database.delete(CourseAttachment) {
+            it.courseId eq courseId
+            it.attachmentId eq attachmentId
         }
     }
 

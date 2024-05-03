@@ -6,10 +6,7 @@ import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dao.message.MessageDAO
 import top.goopper.platform.dao.message.UserMessageDAO
 import top.goopper.platform.dto.UserDTO
-import top.goopper.platform.dto.message.MessageDTO
-import top.goopper.platform.dto.message.MessageListDTO
-import top.goopper.platform.dto.message.MessageQueryDTO
-import top.goopper.platform.dto.message.UserMessageDTO
+import top.goopper.platform.dto.message.*
 
 @Service
 class MessageService(
@@ -20,10 +17,10 @@ class MessageService(
     private val pageSize = 10
 
     // get messages of a user
-    fun getPage(dto: MessageQueryDTO): List<MessageListDTO> {
+    fun getPage(dto: MessageQueryDTO): MessagePageDTO {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val messages = userMessageDAO.getMessages(user.id, dto, pageSize)
-        return messages
+        val result = userMessageDAO.getMessages(user.id, dto, pageSize)
+        return result
     }
 
     // send messages to a user
@@ -47,6 +44,11 @@ class MessageService(
     // receive one message
     fun receiveOne(id: Int) {
         userMessageDAO.readOne(id)
+    }
+
+    fun getTypes(): List<MessageTypeListDTO> {
+        val types = messageDAO.getTypes()
+        return types
     }
 
 }

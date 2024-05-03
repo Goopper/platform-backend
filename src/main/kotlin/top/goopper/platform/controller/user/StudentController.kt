@@ -3,10 +3,7 @@ package top.goopper.platform.controller.user
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.pojo.Response
 import top.goopper.platform.service.StudentService
@@ -24,8 +21,11 @@ class StudentController(
      */
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     @GetMapping("/course/current/all")
-    fun getCurrentLearningCourse(): ResponseEntity<Response> {
-        val courses = studentService.getCurrentLearningCourseList()
+    fun getCurrentLearningCourse(
+        @RequestParam typeId: Int? = null,
+        @RequestParam name: String = ""
+    ): ResponseEntity<Response> {
+        val courses = studentService.getCurrentLearningCourseList(typeId, name)
         return ResponseEntity.ok(Response.success(courses))
     }
 
@@ -36,8 +36,11 @@ class StudentController(
      */
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     @GetMapping("/course")
-    fun getAvailableCourse(): ResponseEntity<Response> {
-        val courses = studentService.getAvailableCourse()
+    fun getAvailableCourse(
+        @RequestParam typeId: Int? = null,
+        @RequestParam name: String = ""
+    ): ResponseEntity<Response> {
+        val courses = studentService.getAvailableCourse(typeId, name)
         return ResponseEntity.ok(Response.success(courses))
     }
 

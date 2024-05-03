@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 import top.goopper.platform.dao.UserDAO
 import top.goopper.platform.dto.DeviceDTO
 import top.goopper.platform.dto.UserDTO
@@ -22,7 +23,8 @@ class UserService(
     private val jwtTokenService: JwtTokenService,
     private val userDAO: UserDAO,
     private val passwordEncoder: BCryptPasswordEncoder,
-    private val redisTemplate: RedisTemplate<String, String>
+    private val redisTemplate: RedisTemplate<String, String>,
+    private val attachmentService: AttachmentService,
 ) : UserDetailsService {
 
     /**
@@ -77,6 +79,16 @@ class UserService(
      */
     fun logout(token: String) {
         jwtTokenService.removeAuthToken(token)
+        SecurityContextHolder.clearContext()
+    }
+
+    /**
+     * Logout user with tokenID
+     * @param tokenId jwt token id
+     * @throws Exception if token is invalid
+     */
+    fun logout(tokenId: Int) {
+        jwtTokenService.removeAuthToken(tokenId)
     }
 
     /**
@@ -105,7 +117,7 @@ class UserService(
                 val payload = jwtTokenService.getPayload(jwtToken)
                 val subject = jacksonObjectMapper().readValue(payload.subject, JwtSubject::class.java)
                 devices.add(DeviceDTO(
-                    payload.subject.hashCode().toString(),
+                    subject.hashCode().toString(),
                     subject.ua,
                     subject.deviceName,
                     payload.issuedAt.toString()
@@ -162,4 +174,21 @@ class UserService(
         )
     }
 
+    // upload avatar file to s3
+    fun uploadAvatar(avatar: MultipartFile): String {
+        val url = attachmentService.upload(avatar)
+        return url
+    }
+
+    fun updateAvatar(url: String) {
+        val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
+        userDAO.updateAvatar(user.id, url);
+    }
+
+    fun updateStudentPassword(password: String, uid: Int) {
+        if (password.isEmpty()) {
+            throw Exception("Password cannot be empty")
+        }
+        userDAO.updatePassword(uid, passwordEncoder.encode(password))
+    }
 }

@@ -18,11 +18,11 @@ class ProviderDAO(private val database: Database) {
 
     fun loadOAuthBindingList(id: Int): List<OAuthDTO> {
         val result = database.from(OAuthProvider)
-            .leftJoin(OAuthUser, OAuthUser.providerId eq OAuthProvider.id)
+            .leftJoin(
+                OAuthUser,
+                (OAuthUser.providerId eq OAuthProvider.id) and (OAuthUser.userId eq id)
+            )
             .select()
-            .where {
-                (OAuthUser.userId eq id) or (OAuthUser.userId.isNull())
-            }
             .map {
                 OAuthDTO(
                     id = it[OAuthProvider.id]!!,

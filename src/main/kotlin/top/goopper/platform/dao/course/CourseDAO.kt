@@ -5,11 +5,14 @@ import org.ktorm.dsl.*
 import org.springframework.stereotype.Repository
 import top.goopper.platform.dto.AttachmentDTO
 import top.goopper.platform.dto.course.CourseDTO
+import top.goopper.platform.dto.course.CourseStatusDTO
+import top.goopper.platform.dto.course.CourseTypeDTO
 import top.goopper.platform.dto.course.create.CreateCourseDTO
 import top.goopper.platform.dto.course.detail.CourseDetailDTO
 import top.goopper.platform.enum.CourseStatusEnum
 import top.goopper.platform.table.User
 import top.goopper.platform.table.course.Course
+import top.goopper.platform.table.course.CourseStatus
 import top.goopper.platform.table.course.CourseType
 import top.goopper.platform.table.student.StudentCourse
 import java.time.LocalDateTime
@@ -44,7 +47,8 @@ class CourseDAO(
                     typeId = it[Course.typeId]!!,
                     desc = it[Course.desc]!!,
                     cover = it[Course.cover]!!,
-                    attachments = emptyList()
+                    attachments = emptyList(),
+                    statusId = it[Course.statusId]!!
                 )
             }.firstOrNull() ?: throw Exception("Course not found")
         return creation
@@ -95,11 +99,19 @@ class CourseDAO(
         return course
     }
 
-    fun loadTeacherCourseList(id: Int): List<CourseDTO> {
+    fun loadTeacherCourseList(id: Int, statusId: Int?, name: String): List<CourseDTO> {
         val courseList = database.from(Course)
             .innerJoin(CourseType, CourseType.id eq Course.typeId)
+            .innerJoin(CourseStatus, CourseStatus.id eq Course.statusId)
             .select()
-            .where(Course.teacherId eq id)
+            .where {
+                var condition = (Course.teacherId eq id) and
+                        (Course.name like "%$name%")
+                if (statusId != null) {
+                    condition = condition and (Course.statusId eq statusId)
+                }
+                condition
+            }
             .map {
                 CourseDTO(
                     id = it[Course.id]!!,
@@ -107,6 +119,7 @@ class CourseDAO(
                     type = it[CourseType.name]!!,
                     desc = it[Course.desc]!!,
                     cover = it[Course.cover]!!,
+                    status = it[CourseStatus.text]!!
                 )
             }
         return courseList
@@ -142,6 +155,90 @@ class CourseDAO(
             .map { it[Course.statusId]!! }
             .firstOrNull() ?: throw Exception("Course not found")
         return status
+    }
+
+    fun disableCourse(courseId: Int) {
+        database.update(Course) {
+            set(it.statusId, CourseStatusEnum.DEACTIVATED.id)
+            set(it.modifyTime, LocalDateTime.now())
+            where {
+                it.id eq courseId
+            }
+        }
+    }
+
+    fun enableCourse(courseId: Int) {
+        database.update(Course) {
+            set(it.statusId, CourseStatusEnum.USING.id)
+            set(it.modifyTime, LocalDateTime.now())
+            where {
+                it.id eq courseId
+            }
+        }
+    }
+
+    fun getCourseTypes(): List<CourseTypeDTO> {
+        val typeList = database.from(CourseType)
+            .select()
+            .map {
+                CourseTypeDTO(
+                    id = it[CourseType.id]!!,
+                    name = it[CourseType.name]!!
+                )
+            }
+        return typeList;
+    }
+
+    fun checkCourseTypeExists(typeName: String): Boolean {
+        val exists = database.from(CourseType)
+            .select()
+            .where(CourseType.name eq typeName)
+            .map { it[CourseType.id] }
+            .firstOrNull()
+        return exists != null
+    }
+
+    fun createCourseType(typeName: String) {
+        database.insert(CourseType) {
+            set(it.name, typeName)
+        }
+    }
+
+    fun loadCourseCopyInfo(courseId: Int): CreateCourseDTO {
+        val course = database.from(Course)
+            .select()
+            .where(Course.id eq courseId)
+            .map {
+                CreateCourseDTO(
+                    id = null,
+                    name = it[Course.name]!!,
+                    teacherId = it[Course.teacherId]!!,
+                    typeId = it[Course.typeId]!!,
+                    desc = it[Course.desc]!!,
+                    cover = it[Course.cover]!!,
+                    attachments = emptyList(),
+                    statusId = it[Course.statusId]!!
+                )
+            }.firstOrNull() ?: throw Exception("Course not found")
+        return course
+    }
+
+    fun deleteCourseType(typeId: Int) {
+        database.delete(CourseType) {
+            it.id eq typeId
+        }
+    }
+
+    fun getCourseStatus(): List<CourseStatusDTO> {
+        val statusList = database.from(CourseStatus)
+            .select()
+            .map {
+                CourseStatusDTO(
+                    id = it[CourseStatus.id]!!,
+                    name = it[CourseStatus.text]!!
+                )
+            }
+        return statusList
     }
 
 }

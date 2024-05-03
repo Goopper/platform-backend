@@ -90,7 +90,7 @@ class OAuthDAO(
                     avatar = it[User.avatar]!!,
                     sex = it[User.sex]!!
                 )
-            }.firstOrNull() ?: throw Exception("User not found")
+            }.firstOrNull() ?: throw Exception("用户不存在")
         return result
     }
 

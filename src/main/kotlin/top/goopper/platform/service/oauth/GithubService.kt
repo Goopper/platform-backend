@@ -64,7 +64,7 @@ class GithubService(
             val response = restTemplate.exchange<String>(url, HttpMethod.GET)
             val user = jacksonObjectMapper().readValue(response.body, Map::class.java)
             if (user["id"].toString() != id) {
-                throw Exception("User not found")
+                throw Exception("用户绑定不存在")
             }
         } catch (e: HttpClientErrorException) {
             throw Exception("User not found or http error")

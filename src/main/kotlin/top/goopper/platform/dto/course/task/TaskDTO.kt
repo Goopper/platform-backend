@@ -1,4 +1,4 @@
-package top.goopper.platform.dto.course
+package top.goopper.platform.dto.course.task
 
 data class TaskDTO(
     val id: Int,

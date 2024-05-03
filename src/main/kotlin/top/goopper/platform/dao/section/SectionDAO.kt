@@ -6,9 +6,9 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dto.course.SectionDTO
-import top.goopper.platform.dto.course.TaskDTO
 import top.goopper.platform.dto.course.create.CreateSectionDTO
 import top.goopper.platform.dto.course.detail.SectionDetailDTO
+import top.goopper.platform.dto.course.task.TaskDTO
 import top.goopper.platform.table.Section
 import top.goopper.platform.table.answer.Answer
 import top.goopper.platform.table.task.Task

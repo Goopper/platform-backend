@@ -4,10 +4,12 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.springframework.stereotype.Repository
 import top.goopper.platform.dto.AttachmentDTO
-import top.goopper.platform.dto.course.TaskDTO
 import top.goopper.platform.dto.course.create.CreateTaskDTO
 import top.goopper.platform.dto.course.detail.TaskDetailDTO
+import top.goopper.platform.dto.course.task.SubmitTypeListDTO
+import top.goopper.platform.dto.course.task.TaskDTO
 import top.goopper.platform.table.answer.Answer
+import top.goopper.platform.table.task.SubmitType
 import top.goopper.platform.table.task.Task
 import top.goopper.platform.table.task.TaskAttachment
 import java.time.LocalDateTime
@@ -145,6 +147,18 @@ class TaskDAO(private val database: Database) {
             }
             .firstOrNull() ?: throw Exception("Task not found")
         return task
+    }
+
+    fun loadSubmitTypeList(): List<SubmitTypeListDTO> {
+        val types = database.from(SubmitType)
+            .select()
+            .map {
+                SubmitTypeListDTO(
+                    id = it[SubmitType.id]!!,
+                    name = it[SubmitType.text]!!
+                )
+            }
+        return types
     }
 
 }

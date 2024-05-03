@@ -1,14 +1,14 @@
 package top.goopper.platform.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.codec.json.Jackson2JsonDecoder
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.servlet.config.annotation.CorsRegistry
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-class WebConfig {
+class WebConfig : WebMvcConfigurer {
 
     @Bean
     fun passwordEncoder() = BCryptPasswordEncoder()
@@ -18,4 +18,12 @@ class WebConfig {
         return RestTemplate()
     }
 
+    override fun addCorsMappings(registry: CorsRegistry) {
+        registry
+            .addMapping("/**")
+            .allowedOrigins("http://localhost:3000", "https://demo.goopper.top", "https://app.goopper.top")
+            .allowedMethods("GET", "POST", "PUT", "DELETE")
+            .allowCredentials(true)
+            .allowedHeaders("*")
+    }
 }

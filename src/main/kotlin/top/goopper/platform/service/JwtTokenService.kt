@@ -9,8 +9,10 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import top.goopper.platform.dao.UserDAO
+import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.pojo.JwtSubject
 import java.util.*
 
@@ -79,6 +81,19 @@ class JwtTokenService(
     fun removeAuthToken(token: String) {
         val subject = getSubject(token)
         val key = ("auth:${subject.uid}:${subject.hashCode()}").toByteArray()
+        redisTemplate.execute {
+            it.keyCommands().del(key)
+        }
+    }
+
+    /**
+     * Remove token from redis with token id
+     * @param tokenId jwt token id
+     * @throws Exception if token is invalid
+     */
+    fun removeAuthToken(tokenId: Int) {
+        val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
+        val key = ("auth:${user.id}:$tokenId").toByteArray()
         redisTemplate.execute {
             it.keyCommands().del(key)
         }

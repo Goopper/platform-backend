@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile
 import top.goopper.platform.dao.AttachmentDAO
 import top.goopper.platform.dto.AttachmentDTO
 import java.io.File
-import java.util.UUID
+import java.util.*
 
 @Service
 class AttachmentService(
@@ -28,7 +28,7 @@ class AttachmentService(
     private val logger = LoggerFactory.getLogger(AttachmentService::class.java)
 
     // upload file to s3
-    fun upload(upload: MultipartFile): AttachmentDTO {
+    fun upload(upload: MultipartFile): String {
         // convert MultipartFile to File
         val file = File.createTempFile("temp", null)
         file.outputStream().use { it.write(upload.bytes) }
@@ -41,17 +41,9 @@ class AttachmentService(
         // delete temp file
         file.delete()
 
+        val url = "$endpoint/$bucket/$filename"
         logger.info("File upload finish, md5: ${result.contentMd5}, name: $filename")
-        val dto = AttachmentDTO(
-            id = null,
-            filename = filename,
-            originalFilename = upload.originalFilename,
-            url = "$endpoint/$bucket/$filename",
-            size = upload.size,
-            type = type,
-            md5 = result.contentMd5
-        )
-        return dto
+        return url
     }
 
     // delete file form s3
@@ -70,6 +62,33 @@ class AttachmentService(
         val request = DeleteObjectsRequest(bucket)
         request.withKeys(*filenames.toTypedArray())
         s3Client.deleteObjects(request)
+    }
+
+    // upload attachment
+    fun uploadAttachment(upload: MultipartFile): AttachmentDTO {
+        // convert MultipartFile to File
+        val file = File.createTempFile("temp", null)
+        file.outputStream().use { it.write(upload.bytes) }
+        val type = upload.originalFilename?.substringAfterLast(".") ?: "unknown"
+        val filename = UUID.randomUUID().toString().replace("-", "") + ".$type"
+        // upload file to s3
+        val request = PutObjectRequest(bucket, filename, file)
+        request.cannedAcl = CannedAccessControlList.PublicRead
+        val result = s3Client.putObject(request)
+        // delete temp file
+        file.delete()
+
+        logger.info("Attachment File upload finish, md5: ${result.contentMd5}, name: $filename")
+        val dto = AttachmentDTO(
+            id = null,
+            filename = filename,
+            originalFilename = upload.originalFilename,
+            url = "$endpoint/$bucket/$filename",
+            size = upload.size,
+            type = type,
+            md5 = result.contentMd5
+        )
+        return dto
     }
 
 }
