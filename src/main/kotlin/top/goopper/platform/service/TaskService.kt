@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dao.AttachmentDAO
 import top.goopper.platform.dao.task.TaskAttachmentDAO
 import top.goopper.platform.dao.task.TaskDAO
+import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.dto.course.create.CreateTaskDTO
 import top.goopper.platform.dto.course.detail.TaskDetailDTO
 import top.goopper.platform.dto.course.task.SubmitTypeListDTO
@@ -73,9 +74,9 @@ class TaskService(
         val auth = SecurityContextHolder.getContext().authentication
         val role = auth.authorities.first().authority
         // check roles
-        if (role == RoleEnum.STUDENT.name) {
+        if (role == "ROLE_${RoleEnum.STUDENT.name}") {
             // load status
-            val uid = auth.principal as Int
+            val uid = (auth.principal as UserDTO).id
             task = taskDAO.studentLoadTaskDetail(taskId, uid)
         } else {
             task = taskDAO.teacherLoadTaskDetail(taskId)

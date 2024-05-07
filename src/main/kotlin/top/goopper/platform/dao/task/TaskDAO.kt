@@ -77,16 +77,20 @@ class TaskDAO(private val database: Database) {
 
     fun studentLoadTasksBySectionId(sectionId: Int, studentId: Int): List<TaskDTO> {
         val tasks = database.from(Task)
-            .leftJoin(Answer, Task.id eq Answer.taskId)
+            .leftJoin(
+                Answer,
+                (Answer.studentId eq studentId)
+                        and (Task.id eq Answer.taskId)
+            )
             .select()
             .where {
-                (Task.sectionId eq sectionId) and (Answer.studentId eq studentId)
+                (Task.sectionId eq sectionId)
             }
             .map {
                 TaskDTO(
                     id = it[Task.id]!!,
                     name = it[Task.name]!!,
-                    status = it[Answer.score] != null,
+                    status = it[Answer.corrected] != null,
                     score = it[Answer.score] ?: 0
                 )
             }
@@ -130,17 +134,21 @@ class TaskDAO(private val database: Database) {
 
     fun studentLoadTaskDetail(taskId: Int, uid: Int): TaskDetailDTO {
         val task = database.from(Task)
-            .leftJoin(Answer, Task.id eq Answer.taskId)
+            .leftJoin(
+                Answer,
+                (Task.id eq Answer.taskId)
+                        and (Answer.studentId eq uid)
+            )
             .select()
             .where {
-                (Task.id eq taskId) and (Answer.studentId eq uid)
+                (Task.id eq taskId)
             }
             .map {
                 TaskDetailDTO(
                     id = it[Task.id]!!,
                     name = it[Task.name]!!,
                     content = it[Task.content]!!,
-                    status = it[Answer.score] != null,
+                    status = it[Answer.corrected] != null,
                     score = it[Answer.score] ?: 0,
                     attachment = emptyList()
                 )

@@ -46,7 +46,7 @@ class SectionService(
         val auth = SecurityContextHolder.getContext().authentication
         val role = auth.authorities.first().authority
         // check roles
-        if (role == RoleEnum.STUDENT.name) {
+        if (role == "ROLE_${RoleEnum.STUDENT.name}") {
             val uid = (auth.principal as UserDTO).id
             val tasks = taskDAO.studentLoadTasksBySectionId(sectionId, uid)
             section.tasks = tasks
