@@ -32,10 +32,16 @@ class UserService(
      * @param number user number
      * @param password encoded password
      * @param userAgentStr user agent
+     * @param forwardIps forward ips for unique device
      * @return jwt token
      * @throws Exception if user does not exist or password is incorrect
      */
-    fun authenticate(number: Int, password: String, userAgentStr: String): String {
+    fun authenticate(
+        number: Int,
+        password: String,
+        userAgentStr: String,
+        forwardIps: String
+    ): String {
         // load user with number
         val fullUserDetails = userDAO.loadFullUserByUserNumber(number)
         val user = fullUserDetails.raw
@@ -48,9 +54,11 @@ class UserService(
         updateCurrentAuthenticatedUser(user)
         // create payload
         val payloadDTO = JwtSubject(
-            user.id, user.number, user.name, user.roleName,
-            userAgent.browser.name, userAgent.operatingSystem.name,
-            userAgentStr
+            uid = user.id,
+            number = user.number,
+            deviceName = userAgent.operatingSystem.deviceType.name,
+            ua = userAgentStr,
+            forwardIps = forwardIps,
         )
         // store jwt and return
         val jwt = jwtTokenService.storeAuthToken(
@@ -120,7 +128,7 @@ class UserService(
                     subject.hashCode().toString(),
                     subject.ua,
                     subject.deviceName,
-                    payload.issuedAt.toString()
+                    payload.issuedAt.time
                 ))
             }
         }

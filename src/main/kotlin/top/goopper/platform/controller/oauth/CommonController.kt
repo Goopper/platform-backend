@@ -1,18 +1,18 @@
 package top.goopper.platform.controller.oauth
 
 import jakarta.servlet.http.HttpServletRequest
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import top.goopper.platform.pojo.Response
 import top.goopper.platform.service.oauth.OAuthService
 
 @RestController
 @RequestMapping("/oauth")
 class CommonController(private val oauthService: OAuthService) {
+
+    private val logger = LoggerFactory.getLogger(CommonController::class.java)
+
     /**
      * GitHub OAuth client login
      * @param oauthId oauth id
@@ -24,10 +24,18 @@ class CommonController(private val oauthService: OAuthService) {
         @PathVariable providerName: String,
         request: HttpServletRequest
     ): ResponseEntity<Response> {
+        var forwardIps = "null"
+        try {
+            forwardIps = request.getHeader("X-Forwarded-For")
+        } catch (e: NullPointerException) {
+            logger.error("OAuth login request error: Forwarded-For is null, provider: $providerName oauthId: $oauthId")
+        }
+
         val jwt = oauthService.authenticate(
             oauthId,
             providerName,
-            request.getHeader("User-Agent")
+            request.getHeader("User-Agent"),
+            forwardIps
         )
         return ResponseEntity.ok(Response.success(jwt))
     }

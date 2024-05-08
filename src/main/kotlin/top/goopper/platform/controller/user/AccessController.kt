@@ -1,6 +1,7 @@
 package top.goopper.platform.controller.user
 
 import jakarta.servlet.http.HttpServletRequest
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import top.goopper.platform.config.SecurityConfig.Companion.AUTHORIZATION_HEADER
@@ -11,6 +12,8 @@ import top.goopper.platform.service.UserService
 class AccessController(
     private val userService: UserService,
 ) {
+
+    private val logger = LoggerFactory.getLogger(AccessController::class.java)
 
     /**
      * 用户登陆
@@ -26,8 +29,14 @@ class AccessController(
         @RequestParam password: String,
         request: HttpServletRequest
     ): ResponseEntity<Response> {
+        var forwardIps = "null"
+        try {
+            forwardIps = request.getHeader("X-Forwarded-For")
+        } catch (e: NullPointerException) {
+            logger.error("Login request error: Forwarded-For is null, userNumber: $number")
+        }
         val userAgent = request.getHeader("User-Agent")
-        val jwt = userService.authenticate(number, password, userAgent)
+        val jwt = userService.authenticate(number, password, userAgent, forwardIps)
         return ResponseEntity.ok(Response.success(jwt))
     }
 

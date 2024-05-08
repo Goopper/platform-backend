@@ -25,7 +25,12 @@ class OAuthService(
      * Authenticate user by OAuth
      * @return jwt token
      */
-    fun authenticate(oauthId: String, providerName: String, userAgentStr: String): String {
+    fun authenticate(
+        oauthId: String,
+        providerName: String,
+        userAgentStr: String,
+        forwardIps: String
+    ): String {
         val user = oauthDAO.loadUserByOAuth(oauthId, providerName)
         val userAgent = UserAgent.parseUserAgentString(userAgentStr)
         // save to SecurityContext
@@ -37,11 +42,9 @@ class OAuthService(
             JwtSubject(
                 uid = user.id,
                 number = user.number,
-                name = user.name,
-                roleName = user.roleName,
-                browserName = userAgent.browser.name,
                 deviceName = userAgent.operatingSystem.deviceType.name,
-                ua = userAgentStr
+                ua = userAgentStr,
+                forwardIps = forwardIps
             )
         )
         return jwt
