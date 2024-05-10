@@ -8,5 +8,6 @@ data class TaskDetailDTO(
     val content: String,
     var status: Boolean,
     var score: Int,
+    val submitTypeId: Int,
     var attachment: List<AttachmentDTO>,
 )
