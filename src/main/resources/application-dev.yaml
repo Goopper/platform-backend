@@ -1,9 +1,15 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/goopper?useUnicode=true&characterEncoding=utf8&useSSL=false
-    username: root
-    password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    basic:
+      url: jdbc:mysql://localhost:3306/goopper?useUnicode=true&characterEncoding=utf8&useSSL=false
+      username: root
+      password: 123456
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    analytical:
+      url: jdbc:mysql://10.200.0.2:3306/baize_5.0?useUnicode=true&characterEncoding=utf8&useSSL=false
+      username: analyst
+      password: "&A83TzzO@G@rQ622^*hD@t%bu$ZpWvuE"
+      driver-class-name: com.mysql.cj.jdbc.Driver
   security:
     oauth2:
       client:

@@ -5,6 +5,7 @@ import org.ktorm.dsl.*
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dto.AttachmentDTO
+import top.goopper.platform.dto.attachment.DeleteAttachmentTargetDTO
 import top.goopper.platform.table.Attachment
 import top.goopper.platform.table.answer.AnswerAttachment
 import top.goopper.platform.table.course.CourseAttachment
@@ -55,10 +56,20 @@ class AttachmentDAO(private val database: Database) {
             .leftJoin(AnswerAttachment, AnswerAttachment.attachmentId eq Attachment.id)
             .select()
             .where { CourseAttachment.attachmentId.isNull() }
-        database.delete(Attachment) {
-            it.id inList query
+        val targets = query.map {
+            DeleteAttachmentTargetDTO(
+                targetId = it[Attachment.id]!!,
+                targetFilename = it[Attachment.filename]!!
+            )
         }
-        return query.map { it[Attachment.filename]!! }
+        if (targets.isEmpty()) {
+            return emptyList()
+        }
+        database.delete(Attachment) { attachment ->
+            attachment.id inList targets.map { it.targetId }
+        }
+
+        return targets.map { it.targetFilename }
     }
 
     fun loadCourseAttachments(courseId: Int): List<AttachmentDTO> {

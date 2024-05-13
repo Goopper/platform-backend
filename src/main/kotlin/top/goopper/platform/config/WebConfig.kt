@@ -21,7 +21,11 @@ class WebConfig : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         registry
             .addMapping("/**")
-            .allowedOrigins("http://localhost:3000", "https://demo.goopper.top", "https://app.goopper.top")
+            .allowedOrigins(
+                "http://localhost:3000",
+                "https://app.goopper.top",
+                "http://10.200.0.21"
+            )
             .allowedMethods("GET", "POST", "PUT", "DELETE")
             .allowCredentials(true)
             .allowedHeaders("*")

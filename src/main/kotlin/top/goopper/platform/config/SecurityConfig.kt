@@ -26,7 +26,9 @@ class SecurityConfig(
             "/oauth/*/url",
             "/oauth/*/auth",
             "/oauth/login/*",
-            "/health")
+            "/health",
+            "/statistic/baize/**",
+            )
         const val AUTHORIZATION_HEADER = "G-Authorization"
     }
 
