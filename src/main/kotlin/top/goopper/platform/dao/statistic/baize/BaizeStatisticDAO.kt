@@ -142,7 +142,7 @@ class BaizeStatisticDAO(
                         resultSet.getString(2),
                         resultSet.getString(3),
                         resultSet.getString(4),
-                        resultSet.getString(4)
+                        resultSet.getString(5)
                     )
                 )
             }
