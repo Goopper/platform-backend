@@ -24,21 +24,51 @@ class BaizeStatisticController(
     }
 
     /**
-     * 不同时间授课数量
+     * 容器开启时长前10的学生
      */
-    @GetMapping("/course/teach/count/start-time")
-    fun getCourseTeachCountByStartTime(): ResponseEntity<Response> {
-        val res = baizeStatisticService.getCourseTeachCountByStartTime()
+    @GetMapping("/container/open/duration/top")
+    fun getContainerOpenDurationTop(): ResponseEntity<Response> {
+        val res = baizeStatisticService.getContainerOpenDurationTop(10)
 
         return ResponseEntity.ok(Response.success(res))
     }
 
     /**
-     * 容器开启时长前10的学生
+     * 获取最近开启的4个容器信息
      */
-    @GetMapping("/container/open/duration/top-ten")
-    fun getContainerOpenDurationTopTen(): ResponseEntity<Response> {
-        val res = baizeStatisticService.getContainerOpenDurationTopTen()
+    @GetMapping("/container/open/recent")
+    fun getContainerOpenRecent(): ResponseEntity<Response> {
+        val res = baizeStatisticService.getContainerOpenRecent(4)
+
+        return ResponseEntity.ok(Response.success(res))
+    }
+
+    /**
+     * 学生完成课程情况
+     */
+    @GetMapping("/student/course/finished/status")
+    fun getStuCourseFinishedStatus(): ResponseEntity<Response> {
+        val res = baizeStatisticService.getStuCourseFinishedStatus()
+
+        return ResponseEntity.ok(Response.success(res))
+    }
+
+    /**
+     * 不同日期下，不同小组（班级）的容器开启数量
+     */
+    @GetMapping("/group/container/open/count")
+    fun getGroupContainerOpenCount(): ResponseEntity<Response> {
+        val res = baizeStatisticService.getGroupContainerOpenCount()
+
+        return ResponseEntity.ok(Response.success(res))
+    }
+
+    /**
+     * 不同课程不同小组的最大学习时间和平均学习时间
+     */
+    @GetMapping("/group/course/study/time")
+    fun getGroupCourseMaxAndAvgStudyTime(): ResponseEntity<Response> {
+        val res = baizeStatisticService.getGroupCourseMaxAndAvgStudyTime()
 
         return ResponseEntity.ok(Response.success(res))
     }
