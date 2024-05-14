@@ -64,7 +64,7 @@ class BaizeStatisticController(
     }
 
     /**
-     * 不同课程不同小组的最大学习时间和平均学习时间
+     * 不同课程不同小组的学习人数和平均学习时间
      */
     @GetMapping("/group/course/study/time")
     fun getGroupCourseMaxAndAvgStudyTime(): ResponseEntity<Response> {

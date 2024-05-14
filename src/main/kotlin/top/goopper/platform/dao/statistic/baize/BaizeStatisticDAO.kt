@@ -118,10 +118,11 @@ class BaizeStatisticDAO(
         analyticalDB.useConnection {
             val statement = it.prepareStatement(
                 """
-                    select s.student_name,
-                           t.user_name,
-                           CONCAT(t.cpu,'核心-',ROUND(t.memory / 1024),'G内存-',t.disk,'G磁盘空间'),
-                           e.exp_title
+                    select t.id,
+                           s.student_name  as '学生姓名',
+                           t.user_name     as '学号',
+                           CONCAT(t.cpu,'核心-',ROUND(t.memory / 1024),'G内存-',t.disk,'G磁盘空间') as '节点信息',
+                           e.exp_title     as '任务名称'
                     from cc_ins_container t
                              inner join bs_ins_stu_group_member s on s.account = t.user_name
                              left join bs_tem_exp_version_record e on t.exp_id = e.exp_id
@@ -140,6 +141,7 @@ class BaizeStatisticDAO(
                         resultSet.getString(1),
                         resultSet.getString(2),
                         resultSet.getString(3),
+                        resultSet.getString(4),
                         resultSet.getString(4)
                     )
                 )
@@ -149,21 +151,21 @@ class BaizeStatisticDAO(
     }
 
     /**
-     * 获取不同小组不同课程的最长学习时间和平均学习时间
+     * 获取不同课程不同小组的学习人数和平均学习时间
      */
     fun getGroupCourseMaxAndAvgStudyTime(): List<List<Any>> {
         analyticalDB.useConnection {
             val statement = it.prepareStatement(
                 """
                     select
-                        CONCAT(course_name,'(',LEFT(group_name, 4),'班)'),
+                        CONCAT(course_name,'(',LEFT(group_name, 4),')'),
                         AVG(teach_hour),
-                        MAX(teach_hour)
+                        COUNT(distinct u.user_id)
                     from bs_home_record a
                     left join sys_user u on u.user_name = a.create_by
                     left join sys_user_role sur on u.user_id = sur.user_id
                     left join sys_role sr on sur.role_id = sr.role_id
-                    where sr.post_code != 'teacher' and group_name != '测试群组1' and group_name != '考试'
+                    where sr.post_code != 'teacher' and group_name != '测试群组1'
                     group by group_name ,course_name;
                 """.trimIndent()
             )
