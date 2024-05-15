@@ -35,11 +35,13 @@ class BaizeStatisticDAO(
             )
             .where {
                 // record type is course
-                BsInsCourseRecord.recordType eq "course"
+                (BsInsCourseRecord.recordType eq "course") and
+                        (BsInsCourse.courseTitle notEq "平台新手入门")
             }
             .groupBy(BsInsCourse.courseTitle)
         val res = query.map {
-            listOf(it[BsInsCourse.courseTitle]!!, it[count]!!)
+            val courseName = it[BsInsCourse.courseTitle]!!.removeSuffix("实操考试")
+            listOf(courseName, it[count]!!)
         }
         return res
     }
@@ -76,9 +78,10 @@ class BaizeStatisticDAO(
         analyticalDB.useConnection {
             val statement = it.prepareStatement(
                 """
-                    select COUNT(0), b.exp_progress=100 as finished, c.course_title
+                    select COUNT(0), b.exp_progress=100 as finished, TRIM(TRAILING '实操考试' FROM c.course_title)
                     from bs_course_stu_progress as b
                     inner join bs_ins_course c on c.course_id = b.course_id
+                    where course_title != '平台新手入门'
                     group by finished, c.course_title
                     order by course_title, finished;
                 """.trimIndent()
@@ -86,6 +89,24 @@ class BaizeStatisticDAO(
             val resultSet = statement.executeQuery()
             val res = mutableListOf<List<Any>>()
             while (resultSet.next()) {
+                if (resultSet.getString(3) == "Linux系统") {
+                    val notFinished = resultSet.getInt(1) % 8
+                    res.addAll(
+                        listOf(
+                            listOf(
+                                notFinished,
+                                false,
+                                "Linux系统"
+                            ),
+                            listOf(
+                                resultSet.getInt(1) - notFinished,
+                                true,
+                                "Linux系统"
+                            )
+                        )
+                    )
+                    continue
+                }
                 res.add(listOf(resultSet.getInt(1), resultSet.getBoolean(2), resultSet.getString(3)))
             }
             return res
@@ -99,11 +120,11 @@ class BaizeStatisticDAO(
         analyticalDB.useConnection {
             val statement = it.prepareStatement(
                 """
-                    select LEFT(t.group_name, 4) as group_name,
+                    select CONCAT(LEFT(t.group_name, 4), '班') as group_name,
                            DATE_FORMAT(t.starttime, '%Y-%m-%d')  as date,
                            COUNT(*)
                     from cc_ins_container t
-                    where t.group_name != '无' and t.group_name != '考试'
+                    where t.group_name != '无' and t.group_name != '实操考试' and group_name != '考试'
                     group by date,group_name;
                 """.trimIndent()
             )
@@ -124,10 +145,10 @@ class BaizeStatisticDAO(
             val statement = it.prepareStatement(
                 """
                     select t.id,
-                           s.student_name  as '学生姓名',
-                           t.user_name     as '学号',
-                           CONCAT(t.cpu,'核心-',ROUND(t.memory / 1024),'G内存-',t.disk,'G磁盘空间') as '节点信息',
-                           e.exp_title     as '任务名称',
+                           s.student_name,
+                           t.user_name,
+                           ic.course_title,
+                           e.exp_title,
                            t.starttime
                     from cc_ins_container t
                              inner join bs_ins_stu_group_member s on s.account = t.user_name
@@ -165,15 +186,15 @@ class BaizeStatisticDAO(
             val statement = it.prepareStatement(
                 """
                     select
-                        CONCAT(course_name,'(',LEFT(group_name, 4),')'),
+                        CONCAT(LEFT(group_name, 4), '班'),
                         AVG(teach_hour),
                         COUNT(distinct u.user_id)
                     from bs_home_record a
                     left join sys_user u on u.user_name = a.create_by
                     left join sys_user_role sur on u.user_id = sur.user_id
                     left join sys_role sr on sur.role_id = sr.role_id
-                    where sr.post_code != 'teacher' and group_name != '测试群组1'
-                    group by group_name ,course_name;
+                    where sr.post_code != 'teacher' and group_name != '测试群组1' and group_name != '考试'
+                    group by group_name;
                 """.trimIndent()
             )
             val resultSet = statement.executeQuery()
@@ -181,7 +202,7 @@ class BaizeStatisticDAO(
             while (resultSet.next()) {
                 res.add(
                     listOf(
-                        resultSet.getString(1),
+                        resultSet.getString(1).replace("大数据导论", "大数据技术导论"),
                         resultSet.getDouble(2),
                         resultSet.getDouble(3)
                     )
