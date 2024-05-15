@@ -34,11 +34,11 @@ class BaizeStatisticController(
     }
 
     /**
-     * 获取最近开启的4个容器信息
+     * 获取最近开启的30个容器信息
      */
     @GetMapping("/container/open/recent")
     fun getContainerOpenRecent(): ResponseEntity<Response> {
-        val res = baizeStatisticService.getContainerOpenRecent(4)
+        val res = baizeStatisticService.getContainerOpenRecent(30)
 
         return ResponseEntity.ok(Response.success(res))
     }

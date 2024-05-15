@@ -8,11 +8,16 @@ import top.goopper.platform.dto.statistic.baize.RecentContainerInfoDTO
 import top.goopper.platform.table.baize.course.BsInsCourse
 import top.goopper.platform.table.baize.course.BsInsCourseMultiRecord
 import top.goopper.platform.table.baize.course.BsInsCourseRecord
+import java.text.SimpleDateFormat
+
+
 
 @Repository
 class BaizeStatisticDAO(
     @Qualifier("analyticalDB") private val analyticalDB: Database
 ) {
+
+    var sdf: SimpleDateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
 
     /**
      * 获取课程教学实验记录
@@ -122,7 +127,8 @@ class BaizeStatisticDAO(
                            s.student_name  as '学生姓名',
                            t.user_name     as '学号',
                            CONCAT(t.cpu,'核心-',ROUND(t.memory / 1024),'G内存-',t.disk,'G磁盘空间') as '节点信息',
-                           e.exp_title     as '任务名称'
+                           e.exp_title     as '任务名称',
+                           t.starttime
                     from cc_ins_container t
                              inner join bs_ins_stu_group_member s on s.account = t.user_name
                              left join bs_tem_exp_version_record e on t.exp_id = e.exp_id
@@ -142,7 +148,8 @@ class BaizeStatisticDAO(
                         resultSet.getString(2),
                         resultSet.getString(3),
                         resultSet.getString(4),
-                        resultSet.getString(5)
+                        resultSet.getString(5),
+                        sdf.format(resultSet.getTimestamp(6))
                     )
                 )
             }
