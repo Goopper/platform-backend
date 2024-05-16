@@ -32,7 +32,7 @@ class AnswerService(
     private val messageUtils: MessageUtils
 ) {
     // TODO: optimize execution time
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun submitTask(dto: SubmitAnswerDTO, uid: Int) {
         val info: SubmitInfoDTO = answerDAO.getSubmitInfo(dto, uid)
         when (info.submitTypeId) {
@@ -95,7 +95,7 @@ class AnswerService(
         }
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun correctTask(correctAnswerDTO: CorrectAnswerDTO) {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
         val studentId = answerDAO.correctAnswer(correctAnswerDTO)

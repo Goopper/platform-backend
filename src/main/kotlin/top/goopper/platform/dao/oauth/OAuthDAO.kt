@@ -27,7 +27,7 @@ class OAuthDAO(
      * @throws Exception if OAuth provider does not exist
      * @throws DuplicateKeyException if OAuth binding already exists
      */
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun bindUserWithOAuth(
         id: Int,
         oauthId: String,
@@ -97,7 +97,7 @@ class OAuthDAO(
     /**
      * Unbind user with OAuth. If record not found, return false.
      */
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun unbindUserWithOAuth(id: Int, providerName: String) {
         val providerId = providerDAO.loadProviderByProviderName(providerName)
         val count = database.delete(OAuthUser) {

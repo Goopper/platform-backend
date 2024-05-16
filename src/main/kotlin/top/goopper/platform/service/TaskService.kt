@@ -19,7 +19,7 @@ class TaskService(
     private val taskAttachmentDAO: TaskAttachmentDAO
 ) {
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun createNewTask(createTaskDTO: CreateTaskDTO) {
         // create attachment and fill the id
         attachmentDAO.batchCreateAttachment(createTaskDTO.attachments)
@@ -42,7 +42,7 @@ class TaskService(
      * Modify course info, will check the attachment conflict and append new attachments
      * conflict attachment: attachment not deleted by user
      */
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun updateTask(createTaskDTO: CreateTaskDTO) {
         // update attachment
         val newAttachments = createTaskDTO.attachments.filter {
@@ -61,7 +61,7 @@ class TaskService(
      * schedule task will be deleted unused attachment (db and files)
      * @see top.goopper.platform.schedule.CleanAttachmentTask
      */
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun deleteTask(taskId: Int) {
         // delete task
         taskDAO.deleteTask(taskId)

@@ -24,7 +24,7 @@ class MessageService(
     }
 
     // send messages to a user
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun send(message: MessageDTO): Int {
         val messageId = messageDAO.createMessage(message)
         val dto = UserMessageDTO(

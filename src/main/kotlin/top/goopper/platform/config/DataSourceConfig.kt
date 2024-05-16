@@ -1,9 +1,11 @@
 package top.goopper.platform.config
 
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import javax.sql.DataSource
 
 @Configuration
@@ -22,6 +24,13 @@ class DataSourceConfig {
             .build()
     }
 
+    @Bean("basicTransactionManager")
+    fun basicTransactionManager(
+        @Qualifier("basicDataSource") dataSource: DataSource
+    ): DataSourceTransactionManager {
+        return DataSourceTransactionManager(dataSource)
+    }
+
     @Bean
     @ConfigurationProperties("spring.datasource.analytical")
     fun analyticalDataSourceProperties(): DataSourceProperties {
@@ -33,6 +42,13 @@ class DataSourceConfig {
         return analyticalDataSourceProperties()
             .initializeDataSourceBuilder()
             .build()
+    }
+
+    @Bean("analyticalTransactionManager")
+    fun analyticalTransactionManager(
+        @Qualifier("analyticalDataSource") dataSource: DataSource
+    ): DataSourceTransactionManager {
+        return DataSourceTransactionManager(dataSource)
     }
 
 }

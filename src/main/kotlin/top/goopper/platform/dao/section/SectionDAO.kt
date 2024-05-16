@@ -45,7 +45,7 @@ class SectionDAO(private val database: Database) {
         return creationInfo
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun modifySection(section: CreateSectionDTO) {
         database.update(Section) {
             set(it.courseId, section.courseId)

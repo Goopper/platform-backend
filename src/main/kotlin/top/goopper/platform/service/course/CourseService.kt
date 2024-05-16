@@ -31,7 +31,7 @@ class CourseService(
      * Create new course, will create attachment and fill the id
      * @param course course info
      */
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun createNewCourse(course: CreateCourseDTO): Int {
         // create attachment and fill the id
         attachmentDAO.batchCreateAttachment(course.attachments)
@@ -59,7 +59,7 @@ class CourseService(
      * @param course course info
      * conflict attachment: attachment not deleted by user
      */
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun updateCourse(course: CreateCourseDTO) {
         // create new attachment and fill the id
         val newAttachments = course.attachments.filter {
@@ -168,7 +168,7 @@ class CourseService(
         courseDAO.createCourseType(typeName)
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun copyCourse(courseId: Int) {
         val course = courseDAO.loadCourseCopyInfo(courseId)
         if (course.statusId == CourseStatusEnum.USING.id) {
