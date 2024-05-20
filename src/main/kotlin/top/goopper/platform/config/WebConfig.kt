@@ -1,5 +1,6 @@
 package top.goopper.platform.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -9,6 +10,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 class WebConfig : WebMvcConfigurer {
+
+    @Value("\${cors.allowed-origins}")
+    private var allowedOrigins: Array<String> = arrayOf(
+        "http://localhost:3000",
+        "https://app.goopper.top"
+    )
 
     @Bean
     fun passwordEncoder() = BCryptPasswordEncoder()
@@ -21,7 +28,7 @@ class WebConfig : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         registry
             .addMapping("/**")
-            .allowedOrigins("http://localhost:3000", "https://demo.goopper.top", "https://app.goopper.top")
+            .allowedOrigins(*allowedOrigins)
             .allowedMethods("GET", "POST", "PUT", "DELETE")
             .allowCredentials(true)
             .allowedHeaders("*")
