@@ -11,15 +11,15 @@ import top.goopper.platform.pojo.Response
 @ControllerAdvice
 class GlobalExceptionAdvice {
 
-    @Value("\${spring.profiles.active}")
-    private lateinit var profile: String
+    @Value("\${error-log}")
+    private var errorLog: Boolean = false
 
     private val logger = LoggerFactory.getLogger(GlobalExceptionAdvice::class.java)
 
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception, request: HttpServletRequest): ResponseEntity<Response> {
         // print for debug
-        if (profile == "dev") {
+        if (errorLog) {
             e.printStackTrace()
         }
         val realIp = request.getHeader("X-Forwarded-For")

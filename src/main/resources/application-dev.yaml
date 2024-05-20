@@ -28,3 +28,8 @@ s3:
   access-key: uNSPywZt8jog4dbA
   secret-key: wRn2JCbVu0EWvj6g7QBLRqS3P7dr1TDd75fwN9Qo
   bucket: goopper
+cors:
+  allowed-origins: http://localhost:3000,https://app.goopper.top
+security:
+  white-list: /login,/oauth/*/url,/oauth/*/auth,/oauth/login/*,/health
+error-log: true
