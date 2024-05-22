@@ -152,9 +152,9 @@ class BaizeStatisticDAO(
                            t.starttime
                     from cc_ins_container t
                              inner join bs_ins_stu_group_member s on s.account = t.user_name
-                             left join bs_tem_exp_version_record e on t.exp_id = e.exp_id
-                             left join bs_ins_course_record cr on t.record_id = cr.record_id
-                             left join bs_ins_course ic on cr.course_id = ic.course_id
+                             inner join bs_tem_exp_version_record e on t.exp_id = e.exp_id
+                             inner join bs_ins_course_record cr on t.record_id = cr.record_id
+                             inner join bs_ins_course ic on cr.course_id = ic.course_id
                     order by t.starttime desc
                     limit ?;
                 """.trimIndent()
