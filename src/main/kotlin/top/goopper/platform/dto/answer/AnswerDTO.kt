@@ -1,17 +1,15 @@
 package top.goopper.platform.dto.answer
 
-import top.goopper.platform.dto.AttachmentDTO
+import java.time.LocalDateTime
 
 data class AnswerDTO(
-    val answerId: Int,
+    val id: Int,
+    val number: Int,
     val studentName: String,
     val groupName: String,
+    val courseName: String,
+    val sectionName: String,
     val taskName: String,
-    val content: String,
-    var attachments: List<AttachmentDTO>,
-    var nextAnswerTaskName: String? = null,
-    var nextAnswerStudentName: String? = null,
-    var nextAnswerGroupName: String? = null,
-    // This is user_message! NOT message!!!
-    var nextAnswerUserMessageId: Int? = null
+    val corrected: Boolean,
+    val submitTime: LocalDateTime,
 )
