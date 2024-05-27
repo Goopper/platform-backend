@@ -26,7 +26,12 @@ class MessageService(
     // send messages to a user
     @Transactional(rollbackFor = [Exception::class])
     fun send(message: MessageDTO): Int {
-        val messageId = messageDAO.createMessage(message)
+        val messageCreateDTO = MessageCreateDTO(
+            title = message.title,
+            content = message.content,
+            typeId = message.typeId,
+        )
+        val messageId = messageDAO.createMessage(messageCreateDTO)
         val dto = UserMessageDTO(
             senderId = message.senderId,
             receiverId = message.receiverId,
@@ -44,6 +49,25 @@ class MessageService(
     fun getTypes(): List<MessageTypeListDTO> {
         val types = messageDAO.getTypes()
         return types
+    }
+
+    // batch send messages
+    @Transactional(rollbackFor = [Exception::class])
+    fun batchSend(message: MessageBatchSendDTO) {
+        val messageCreateDTO = MessageCreateDTO(
+            title = message.title,
+            content = message.content,
+            typeId = message.typeId,
+        )
+        val messageId = messageDAO.createMessage(messageCreateDTO)
+        val dtoList = message.receiverIds.map {
+            UserMessageDTO(
+                senderId = message.senderId,
+                receiverId = it,
+                messageId = messageId,
+            )
+        }
+        userMessageDAO.batchCreateUserMessage(dtoList)
     }
 
 }

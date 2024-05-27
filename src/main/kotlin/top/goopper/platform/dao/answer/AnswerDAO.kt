@@ -3,10 +3,7 @@ package top.goopper.platform.dao.answer
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.springframework.stereotype.Repository
-import top.goopper.platform.dto.answer.AnswerDTO
-import top.goopper.platform.dto.answer.CorrectAnswerDTO
-import top.goopper.platform.dto.answer.SubmitAnswerDTO
-import top.goopper.platform.dto.answer.SubmitInfoDTO
+import top.goopper.platform.dto.answer.*
 import top.goopper.platform.table.Group
 import top.goopper.platform.table.Section
 import top.goopper.platform.table.User
@@ -63,50 +60,6 @@ class AnswerDAO(
         return studentId
     }
 
-    /**
-     * Get the answer by the message id.
-     * @param teacherId the teacher id
-     * @param messageId the user_message id
-     *
-     * @exception Exception if no answer found
-     */
-    fun getAnswerByMessageId(teacherId: Int, messageId: Int): AnswerDTO {
-        val query = database.from(UserMessage)
-            .innerJoin(Answer, Answer.messageId eq UserMessage.id)
-            .innerJoin(User, User.id eq UserMessage.senderId)
-            .innerJoin(Group, Group.id eq User.groupId)
-            .innerJoin(Task, Task.id eq Answer.taskId)
-            .select(Answer.id, UserMessage.id, Answer.content, User.name, Group.name, Task.name)
-            .where {
-                (UserMessage.receiverId eq teacherId) and
-                        (Answer.corrected eq false) and
-                        (UserMessage.id gte messageId)
-            }
-            .limit(2)
-        val iterator = query.iterator()
-        val current = iterator.next()
-        val result = AnswerDTO(
-            answerId = current[Answer.id]!!,
-            studentName = current[User.name]!!,
-            groupName = current[Group.name]!!,
-            taskName = current[Task.name]!!,
-            content = current[Answer.content]!!,
-            attachments = emptyList()
-        )
-        // has next answer need to correct
-        if (iterator.hasNext()) {
-            val next = iterator.next()
-            result.apply {
-                nextAnswerUserMessageId = next[UserMessage.id]
-                nextAnswerTaskName = next[Task.name]
-                nextAnswerStudentName = next[User.name]
-                nextAnswerGroupName = next[Group.name]
-            }
-        }
-
-        return result
-    }
-
     fun getSubmitInfo(dto: SubmitAnswerDTO, uid: Int): SubmitInfoDTO {
         val result = database.from(Task)
             .innerJoin(Section, Section.id eq Task.sectionId)
@@ -129,6 +82,113 @@ class AnswerDAO(
                 )
             }.firstOrNull() ?: throw IllegalArgumentException("No task found")
         return result
+    }
+
+    fun getAnswerById(answerId: Int): AnswerDetailDTO {
+        val answer = database.from(Answer)
+            .innerJoin(Task, Task.id eq Answer.taskId)
+            .innerJoin(Section, Section.id eq Answer.sectionId)
+            .innerJoin(Course, Course.id eq Section.courseId)
+            .innerJoin(User, User.id eq Answer.studentId)
+            .innerJoin(Group, Group.id eq User.groupId)
+            .select(
+                Answer.id, Answer.content, Task.content, User.number, User.name, Group.name, Course.name, Section.name,
+                Task.name, Answer.corrected, Answer.createTime
+            )
+            .where { (Answer.id eq answerId) and (Answer.messageId.isNotNull()) }
+            .map {
+                AnswerDetailDTO(
+                    id = it[Answer.id]!!,
+                    answerContent = it[Answer.content]!!,
+                    taskContent = it[Task.content]!!,
+                    attachments = emptyList(),
+                    answer = buildAnswerDTO(it)
+                )
+            }
+            .firstOrNull() ?: throw IllegalArgumentException("No answer found")
+        return answer
+    }
+
+    fun getSubmittedAnswers(answerQueryDTO: AnswerQueryDTO): List<AnswerDTO> {
+        var condition = (UserMessage.receiverId eq answerQueryDTO.teacherId)
+            .and(Section.name like "%${answerQueryDTO.sectionName}%")
+            .and(Task.name like "%${answerQueryDTO.taskName}%")
+            .and(User.name like "%${answerQueryDTO.studentName}%")
+        if (answerQueryDTO.groupId != null) {
+            condition = condition.and(User.groupId eq answerQueryDTO.groupId)
+        }
+        if (answerQueryDTO.courseId != null) {
+            condition = condition.and(Course.id eq answerQueryDTO.courseId)
+        }
+        if (answerQueryDTO.corrected != null) {
+            condition = condition.and(Answer.corrected eq answerQueryDTO.corrected)
+        }
+
+        val query = database.from(UserMessage)
+            .innerJoin(Answer, Answer.messageId eq UserMessage.id)
+            .innerJoin(Task, Task.id eq Answer.taskId)
+            .innerJoin(Section, Section.id eq Answer.sectionId)
+            .innerJoin(Course, Course.id eq Section.courseId)
+            .innerJoin(User, User.id eq Answer.studentId)
+            .innerJoin(Group, Group.id eq User.groupId)
+            .select(
+                Answer.id, User.number, User.name, Group.name, Course.name, Section.name,
+                Task.name, Answer.corrected, Answer.createTime
+            )
+            .where { condition }
+            .orderBy(Answer.createTime.desc())
+            .limit((answerQueryDTO.page - 1) * answerQueryDTO.pageSize, answerQueryDTO.pageSize)
+        val result = query.map {
+            buildAnswerDTO(it)
+        }
+        return result
+    }
+
+    fun getAnswerIdsAndTaskNames(answerIds: List<Int>): List<AnswerIdWithTaskNameDTO> {
+        val result = database.from(Answer)
+            .innerJoin(Task, Task.id eq Answer.taskId)
+            .select(Answer.id, Task.name)
+            .where { Answer.id inList answerIds }
+            .map {
+                AnswerIdWithTaskNameDTO(
+                    answerId = it[Answer.id]!!,
+                    taskName = it[Task.name]!!
+                )
+            }
+        return result
+    }
+
+    private fun buildAnswerDTO(it: QueryRowSet) = AnswerDTO(
+        id = it[Answer.id]!!,
+        number = it[User.number]!!,
+        studentName = it[User.name]!!,
+        groupName = it[Group.name]!!,
+        courseName = it[Course.name]!!,
+        sectionName = it[Section.name]!!,
+        taskName = it[Task.name]!!,
+        corrected = it[Answer.corrected]!!,
+        submitTime = it[Answer.createTime]!!
+    )
+
+    fun correctTasks(batchCorrectAnswerDTO: BatchCorrectAnswerDTO, teacherId: Int): List<Int> {
+        database.update(Answer) {
+            set(it.comment, batchCorrectAnswerDTO.comment)
+            set(it.score, batchCorrectAnswerDTO.score)
+            set(it.corrected, true)
+            set(it.modifyTime, LocalDateTime.now())
+            where {
+                (it.id inList batchCorrectAnswerDTO.ids) and (it.corrected eq false)
+            }
+        }
+
+        // corrected student ids
+        val studentIds = database.from(Answer)
+            .select(Answer.studentId)
+            .where {
+                (Answer.id inList batchCorrectAnswerDTO.ids) and (Answer.corrected eq true)
+            }
+            .map { it[Answer.studentId]!! }
+        return studentIds
     }
 
 }

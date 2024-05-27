@@ -80,4 +80,16 @@ class UserMessageDAO(private val database: Database) {
         }
     }
 
+    fun batchCreateUserMessage(dtoList: List<UserMessageDTO>) {
+        database.batchInsert(UserMessage) {
+            for (dto in dtoList) {
+                item {
+                    set(it.senderId, dto.senderId)
+                    set(it.receiverId, dto.receiverId)
+                    set(it.messageId, dto.messageId)
+                }
+            }
+        }
+    }
+
 }

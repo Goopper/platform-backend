@@ -9,10 +9,8 @@ import top.goopper.platform.dao.AttachmentDAO
 import top.goopper.platform.dao.answer.AnswerAttachmentDAO
 import top.goopper.platform.dao.answer.AnswerDAO
 import top.goopper.platform.dto.UserDTO
-import top.goopper.platform.dto.answer.AnswerDTO
-import top.goopper.platform.dto.answer.CorrectAnswerDTO
-import top.goopper.platform.dto.answer.SubmitAnswerDTO
-import top.goopper.platform.dto.answer.SubmitInfoDTO
+import top.goopper.platform.dto.answer.*
+import top.goopper.platform.dto.message.MessageBatchSendDTO
 import top.goopper.platform.dto.message.MessageDTO
 import top.goopper.platform.enum.MessageTypeEnum
 import top.goopper.platform.enum.TaskSubmitTypeEnum
@@ -113,16 +111,46 @@ class AnswerService(
         messageService.send(message)
     }
 
-    fun getSubmittedAnswer(messageId: Int): AnswerDTO {
-        val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
+    fun getSubmittedAnswer(answerId: Int): AnswerDetailDTO {
         val answer = try {
-            answerDAO.getAnswerByMessageId(user.id, messageId)
+            answerDAO.getAnswerById(answerId)
         } catch (e: Exception) {
             throw Exception("No answer found")
         }
-        val attachments = attachmentDAO.loadAnswerAttachments(answer.answerId)
+        val attachments = attachmentDAO.loadAnswerAttachments(answer.id)
         answer.attachments = attachments
         return answer
     }
 
+    fun getSubmittedAnswers(answerQueryDTO: AnswerQueryDTO): List<AnswerDTO> {
+        return answerDAO.getSubmittedAnswers(answerQueryDTO)
+    }
+
+    fun getAnswerIdsAndTaskNames(answerIds: List<Int>): List<AnswerIdWithTaskNameDTO> {
+        if (answerIds.isEmpty()) {
+            return emptyList()
+        }
+        return answerDAO.getAnswerIdsAndTaskNames(answerIds)
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun correctTasks(batchCorrectAnswerDTO: BatchCorrectAnswerDTO) {
+        if (batchCorrectAnswerDTO.ids.isEmpty()) {
+            return
+        }
+        val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
+        val studentIds = answerDAO.correctTasks(batchCorrectAnswerDTO, user.id)
+        val message = MessageBatchSendDTO(
+            title = messageUtils.correctFinishedTitle,
+            content = messageUtils.buildAnswerCorrectResultMessageContent(
+                batchCorrectAnswerDTO.score,
+                batchCorrectAnswerDTO.comment
+            ),
+            typeId = MessageTypeEnum.CORRECTED.id,
+            senderId = user.id,
+            receiverIds = studentIds,
+        )
+        // batch send messages to students
+        messageService.batchSend(message)
+    }
 }
