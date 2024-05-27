@@ -1,5 +1,6 @@
 package top.goopper.platform.config
 
+import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,8 +23,7 @@ class SecurityConfig(
     private val passwordEncoder: BCryptPasswordEncoder
 ) {
     companion object {
-        @Value("\${security.white-list}")
-        val whiteList = arrayOf(
+        var whiteList = arrayOf(
             "/login",
             "/oauth/*/url",
             "/oauth/*/auth",
@@ -32,6 +32,14 @@ class SecurityConfig(
             "/statistic/baize/**",
             )
         const val AUTHORIZATION_HEADER = "G-Authorization"
+    }
+
+    @Value("\${security.white-list}")
+    private lateinit var configWhiteList: Array<String>
+
+    @PostConstruct
+    fun init() {
+        whiteList = configWhiteList
     }
 
     @Bean
