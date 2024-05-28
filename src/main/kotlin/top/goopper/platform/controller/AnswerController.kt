@@ -24,9 +24,9 @@ class AnswerController(
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     @GetMapping
     fun getSubmittedAnswers(
-        @RequestParam corrected: Boolean?,
-        @RequestParam groupId: Int?,
-        @RequestParam courseId: Int?,
+        @RequestParam corrected: Boolean? = null,
+        @RequestParam groupId: Int? = null,
+        @RequestParam courseId: Int? = null,
         @RequestParam sectionName: String,
         @RequestParam taskName: String,
         @RequestParam studentName: String,
