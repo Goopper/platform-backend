@@ -122,7 +122,7 @@ class AnswerService(
         return answer
     }
 
-    fun getSubmittedAnswers(answerQueryDTO: AnswerQueryDTO): List<AnswerDTO> {
+    fun getSubmittedAnswers(answerQueryDTO: AnswerQueryDTO): AnswerPageDTO {
         return answerDAO.getSubmittedAnswers(answerQueryDTO)
     }
 
@@ -152,5 +152,9 @@ class AnswerService(
         )
         // batch send messages to students
         messageService.batchSend(message)
+    }
+
+    fun getCorrectedAnswer(id: Int): CorrectedAnswerDetailDTO {
+        return answerDAO.getCorrectedAnswer(id)
     }
 }

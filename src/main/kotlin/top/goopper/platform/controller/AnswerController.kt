@@ -33,16 +33,18 @@ class AnswerController(
         @RequestParam page: Int,
     ): ResponseEntity<Response> {
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val answers = answerService.getSubmittedAnswers(AnswerQueryDTO(
-            teacherId = user.id,
-            corrected = corrected,
-            groupId = groupId,
-            courseId = courseId,
-            sectionName = sectionName,
-            taskName = taskName,
-            studentName = studentName,
-            page = page
-        ))
+        val answers = answerService.getSubmittedAnswers(
+            AnswerQueryDTO(
+                teacherId = user.id,
+                corrected = corrected,
+                groupId = groupId,
+                courseId = courseId,
+                sectionName = sectionName,
+                taskName = taskName,
+                studentName = studentName,
+                page = page
+            )
+        )
         return ResponseEntity.ok(Response.success(answers))
     }
 
@@ -99,6 +101,18 @@ class AnswerController(
     fun correctTasks(@RequestBody batchCorrectAnswerDTO: BatchCorrectAnswerDTO): ResponseEntity<Response> {
         answerService.correctTasks(batchCorrectAnswerDTO)
         return ResponseEntity.ok(Response.success())
+    }
+
+    /**
+     * 教师获取已篇批改完毕的作业的信息（包括评语和分数）
+     */
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @GetMapping("/corrected/{id}")
+    fun getCorrectedAnswer(
+        @PathVariable id: Int
+    ): ResponseEntity<Response> {
+        val answer = answerService.getCorrectedAnswer(id)
+        return ResponseEntity.ok(Response.success(answer))
     }
 
 }

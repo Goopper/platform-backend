@@ -109,7 +109,7 @@ class AnswerDAO(
         return answer
     }
 
-    fun getSubmittedAnswers(answerQueryDTO: AnswerQueryDTO): List<AnswerDTO> {
+    fun getSubmittedAnswers(answerQueryDTO: AnswerQueryDTO): AnswerPageDTO {
         var condition = (UserMessage.receiverId eq answerQueryDTO.teacherId)
             .and(Section.name like "%${answerQueryDTO.sectionName}%")
             .and(Task.name like "%${answerQueryDTO.taskName}%")
@@ -138,10 +138,20 @@ class AnswerDAO(
             .where { condition }
             .orderBy(Answer.createTime.desc())
             .limit((answerQueryDTO.page - 1) * answerQueryDTO.pageSize, answerQueryDTO.pageSize)
-        val result = query.map {
+        val answers = query.map {
             buildAnswerDTO(it)
         }
-        return result
+        val total = query.totalRecordsInAllPages
+        var totalPage = total / answerQueryDTO.pageSize + if (total % answerQueryDTO.pageSize == 0) 0 else 1
+        if (total == 0) {
+            totalPage = 1
+        }
+        return AnswerPageDTO(
+            page = answerQueryDTO.page,
+            total = total,
+            list = answers,
+            totalPage = totalPage
+        )
     }
 
     fun getAnswerIdsAndTaskNames(answerIds: List<Int>): List<AnswerIdWithTaskNameDTO> {
@@ -152,7 +162,8 @@ class AnswerDAO(
             .map {
                 AnswerIdWithTaskNameDTO(
                     answerId = it[Answer.id]!!,
-                    taskName = it[Task.name]!!
+                    taskName = it[Task.name]!!,
+                    corrected = it[Answer.corrected]!!
                 )
             }
         return result
@@ -189,6 +200,33 @@ class AnswerDAO(
             }
             .map { it[Answer.studentId]!! }
         return studentIds
+    }
+
+    fun getCorrectedAnswer(id: Int): CorrectedAnswerDetailDTO {
+        val answer = database.from(Answer)
+            .innerJoin(Task, Task.id eq Answer.taskId)
+            .innerJoin(Section, Section.id eq Answer.sectionId)
+            .innerJoin(Course, Course.id eq Section.courseId)
+            .innerJoin(User, User.id eq Answer.studentId)
+            .innerJoin(Group, Group.id eq User.groupId)
+            .select(
+                Answer.id, Answer.content, Task.content, User.number, User.name, Group.name, Course.name, Section.name,
+                Task.name, Answer.corrected, Answer.createTime, Answer.score, Answer.comment
+            )
+            .where { (Answer.id eq id) and (Answer.corrected eq true) }
+            .map {
+                CorrectedAnswerDetailDTO(
+                    id = it[Answer.id]!!,
+                    answerContent = it[Answer.content]!!,
+                    taskContent = it[Task.content]!!,
+                    attachments = emptyList(),
+                    answer = buildAnswerDTO(it),
+                    score = it[Answer.score]!!,
+                    comment = it[Answer.comment]!!
+                )
+            }
+            .firstOrNull() ?: throw IllegalArgumentException("No answer found")
+        return answer
     }
 
 }
