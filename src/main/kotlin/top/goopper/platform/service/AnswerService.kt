@@ -155,6 +155,8 @@ class AnswerService(
     }
 
     fun getCorrectedAnswer(id: Int): CorrectedAnswerDetailDTO {
-        return answerDAO.getCorrectedAnswer(id)
+        val answer = answerDAO.getCorrectedAnswer(id)
+        answer.attachments = attachmentDAO.loadAnswerAttachments(answer.id)
+        return answer
     }
 }
