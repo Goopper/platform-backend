@@ -157,7 +157,7 @@ class AnswerDAO(
     fun getAnswerIdsAndTaskNames(answerIds: List<Int>): List<AnswerIdWithTaskNameDTO> {
         val result = database.from(Answer)
             .innerJoin(Task, Task.id eq Answer.taskId)
-            .select(Answer.id, Task.name)
+            .select(Answer.id, Task.name, Answer.corrected)
             .where { Answer.id inList answerIds }
             .map {
                 AnswerIdWithTaskNameDTO(
