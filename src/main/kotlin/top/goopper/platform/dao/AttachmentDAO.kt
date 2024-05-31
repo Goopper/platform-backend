@@ -49,16 +49,21 @@ class AttachmentDAO(private val database: Database) {
      */
     @Transactional(rollbackFor = [Exception::class])
     fun batchDeleteUnusedAttachment(): List<String>{
-        val query = database.from(Attachment)
+        val attachments = database.from(Attachment)
             .leftJoin(CourseAttachment, CourseAttachment.attachmentId eq Attachment.id)
             .leftJoin(TaskAttachment, TaskAttachment.attachmentId eq Attachment.id)
             .leftJoin(AnswerAttachment, AnswerAttachment.attachmentId eq Attachment.id)
             .select()
             .where { CourseAttachment.attachmentId.isNull() }
-        database.delete(Attachment) {
-            it.id inList query
+            .map { Pair(it[Attachment.id]!!, it[Attachment.filename]!!)}
+        if (attachments.isEmpty()) {
+            return emptyList()
         }
-        return query.map { it[Attachment.filename]!! }
+        database.delete(Attachment) {
+            it.id inList attachments.map { a -> a.first }
+        }
+        // return filenames
+        return attachments.map { it.second }
     }
 
     fun loadCourseAttachments(courseId: Int): List<AttachmentDTO> {

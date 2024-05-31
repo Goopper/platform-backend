@@ -20,7 +20,9 @@ class CleanAttachmentTask(
         logger.info("Start clean attachment")
         val start = System.currentTimeMillis()
         val filenames = attachmentDAO.batchDeleteUnusedAttachment()
-        attachmentService.batchDelete(filenames)
+        if (filenames.isNotEmpty()) {
+            attachmentService.batchDelete(filenames)
+        }
         val end = System.currentTimeMillis()
         logger.info("Clean attachment finished, count: ${filenames.size}, time: ${end - start}ms")
     }
