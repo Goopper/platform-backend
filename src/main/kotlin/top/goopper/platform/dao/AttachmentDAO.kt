@@ -5,7 +5,6 @@ import org.ktorm.dsl.*
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dto.AttachmentDTO
-import top.goopper.platform.dto.attachment.DeleteAttachmentTargetDTO
 import top.goopper.platform.table.Attachment
 import top.goopper.platform.table.answer.AnswerAttachment
 import top.goopper.platform.table.course.CourseAttachment
@@ -34,7 +33,7 @@ class AttachmentDAO(private val database: Database) {
         }
     }
 
-    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
+    @Transactional(rollbackFor = [Exception::class])
     fun deleteAttachmentByName(filename: String) {
         val count = database.delete(Attachment) {
             it.filename eq filename
@@ -48,28 +47,23 @@ class AttachmentDAO(private val database: Database) {
      * Delete all attachments that are not used in any course
      * @return the filename of the deleted attachments
      */
-    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
+    @Transactional(rollbackFor = [Exception::class])
     fun batchDeleteUnusedAttachment(): List<String>{
-        val query = database.from(Attachment)
+        val attachments = database.from(Attachment)
             .leftJoin(CourseAttachment, CourseAttachment.attachmentId eq Attachment.id)
             .leftJoin(TaskAttachment, TaskAttachment.attachmentId eq Attachment.id)
             .leftJoin(AnswerAttachment, AnswerAttachment.attachmentId eq Attachment.id)
             .select()
             .where { CourseAttachment.attachmentId.isNull() }
-        val targets = query.map {
-            DeleteAttachmentTargetDTO(
-                targetId = it[Attachment.id]!!,
-                targetFilename = it[Attachment.filename]!!
-            )
-        }
-        if (targets.isEmpty()) {
+            .map { Pair(it[Attachment.id]!!, it[Attachment.filename]!!)}
+        if (attachments.isEmpty()) {
             return emptyList()
         }
-        database.delete(Attachment) { attachment ->
-            attachment.id inList targets.map { it.targetId }
+        database.delete(Attachment) {
+            it.id inList attachments.map { a -> a.first }
         }
-
-        return targets.map { it.targetFilename }
+        // return filenames
+        return attachments.map { it.second }
     }
 
     fun loadCourseAttachments(courseId: Int): List<AttachmentDTO> {
