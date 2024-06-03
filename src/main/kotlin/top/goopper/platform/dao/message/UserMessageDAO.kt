@@ -22,6 +22,7 @@ class UserMessageDAO(private val database: Database) {
             set(it.receiverId, userMessageDTO.receiverId)
             set(it.messageId, userMessageDTO.messageId)
             set(it.readTime, userMessageDTO.readTime)
+            set(it.answerId, userMessageDTO.answerId)
         } as Int
 
         return id
