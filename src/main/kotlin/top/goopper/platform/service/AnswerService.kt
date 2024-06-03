@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dao.AttachmentDAO
 import top.goopper.platform.dao.answer.AnswerAttachmentDAO
 import top.goopper.platform.dao.answer.AnswerDAO
+import top.goopper.platform.dao.message.MessageAnswerDAO
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.dto.answer.*
 import top.goopper.platform.dto.message.MessageBatchSendDTO
@@ -27,7 +28,8 @@ class AnswerService(
     private val attachmentDAO: AttachmentDAO,
     private val redisTemplate: RedisTemplate<String, Any>,
     private val redisUtils: RedisUtils,
-    private val messageUtils: MessageUtils
+    private val messageUtils: MessageUtils,
+    private val messageAnswerDAO: MessageAnswerDAO
 ) {
     // TODO: optimize execution time
     @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
@@ -108,7 +110,9 @@ class AnswerService(
             senderId = user.id,
             receiverId = studentId,
         )
-        messageService.send(message)
+        val messageId = messageService.send(message)
+        // create message_answer
+        messageAnswerDAO.createMessageAnswer(correctAnswerDTO.id, messageId)
     }
 
     fun getSubmittedAnswer(answerId: Int): AnswerDetailDTO {

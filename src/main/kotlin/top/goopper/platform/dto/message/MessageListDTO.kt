@@ -11,5 +11,5 @@ data class MessageListDTO(
     val sender: UserDTO,
     val date: LocalDateTime,
     val isRead: Boolean,
-    val taskId: Int?
+    val answerId: Int?
 )
