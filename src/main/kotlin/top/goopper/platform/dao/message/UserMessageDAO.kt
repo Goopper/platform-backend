@@ -9,6 +9,7 @@ import top.goopper.platform.dto.message.MessagePageDTO
 import top.goopper.platform.dto.message.MessageQueryDTO
 import top.goopper.platform.dto.message.UserMessageDTO
 import top.goopper.platform.table.User
+import top.goopper.platform.table.answer.Answer
 import top.goopper.platform.table.message.Message
 import top.goopper.platform.table.message.UserMessage
 import java.time.LocalDateTime
@@ -31,7 +32,11 @@ class UserMessageDAO(private val database: Database) {
         val query = database.from(UserMessage)
             .leftJoin(User, User.id eq UserMessage.senderId)
             .innerJoin(Message, Message.id eq UserMessage.messageId)
-            .select()
+            .leftJoin(Answer, Answer.messageId eq UserMessage.id)
+            .select(
+                UserMessage.id, Message.title, Message.content, Message.typeId, UserMessage.senderId, User.name,
+                User.avatar, User.email, User.sex, User.number, UserMessage.createTime, UserMessage.readTime, Answer.id
+            )
             .where {
                 (UserMessage.receiverId eq uid) and
                         (Message.title like "%${dto.title}%") and
@@ -58,7 +63,8 @@ class UserMessageDAO(private val database: Database) {
                     groupName = ""
                 ),
                 date = it[UserMessage.createTime]!!,
-                isRead = it[UserMessage.readTime] != null
+                isRead = it[UserMessage.readTime] != null,
+                taskId = it[Answer.id]
             )
         }
         val total = query.totalRecordsInAllPages
