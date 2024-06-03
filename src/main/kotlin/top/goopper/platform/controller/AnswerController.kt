@@ -106,7 +106,6 @@ class AnswerController(
     /**
      * 教师获取已篇批改完毕的作业的信息（包括评语和分数）
      */
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     @GetMapping("/corrected/{id}")
     fun getCorrectedAnswer(
         @PathVariable id: Int
