@@ -6,5 +6,6 @@ data class UserMessageDTO(
     val senderId: Int,
     val receiverId: Int,
     val messageId: Int,
+    val answerId: Int? = null,
     val readTime: LocalDateTime? = null,
 )

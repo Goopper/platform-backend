@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional
 import top.goopper.platform.dao.AttachmentDAO
 import top.goopper.platform.dao.answer.AnswerAttachmentDAO
 import top.goopper.platform.dao.answer.AnswerDAO
-import top.goopper.platform.dao.message.MessageAnswerDAO
 import top.goopper.platform.dto.UserDTO
 import top.goopper.platform.dto.answer.*
 import top.goopper.platform.dto.message.MessageBatchSendDTO
@@ -28,8 +27,7 @@ class AnswerService(
     private val attachmentDAO: AttachmentDAO,
     private val redisTemplate: RedisTemplate<String, Any>,
     private val redisUtils: RedisUtils,
-    private val messageUtils: MessageUtils,
-    private val messageAnswerDAO: MessageAnswerDAO
+    private val messageUtils: MessageUtils
 ) {
     // TODO: optimize execution time
     @Transactional(rollbackFor = [Exception::class])
@@ -110,9 +108,7 @@ class AnswerService(
             senderId = user.id,
             receiverId = studentId,
         )
-        val messageId = messageService.send(message)
-        // create message_answer
-        messageAnswerDAO.createMessageAnswer(correctAnswerDTO.id, messageId)
+        messageService.sendForCorrect(message, correctAnswerDTO.id)
     }
 
     fun getSubmittedAnswer(answerId: Int): AnswerDetailDTO {
@@ -143,7 +139,8 @@ class AnswerService(
             return
         }
         val user = SecurityContextHolder.getContext().authentication.principal as UserDTO
-        val studentIds = answerDAO.correctTasks(batchCorrectAnswerDTO, user.id)
+        // correct result(Map): answerId to studentId(rec)
+        val correctResult = answerDAO.correctTasks(batchCorrectAnswerDTO, user.id)
         val message = MessageBatchSendDTO(
             title = messageUtils.correctFinishedTitle,
             content = messageUtils.buildAnswerCorrectResultMessageContent(
@@ -152,10 +149,10 @@ class AnswerService(
             ),
             typeId = MessageTypeEnum.CORRECTED.id,
             senderId = user.id,
-            receiverIds = studentIds,
+            receiverIds = correctResult.values.toList(),
         )
         // batch send messages to students
-        messageService.batchSend(message)
+        messageService.batchSendForBatchCorrect(message, correctResult)
     }
 
     fun getCorrectedAnswer(id: Int): CorrectedAnswerDetailDTO {
