@@ -194,7 +194,7 @@ class AnswerDAO(
 
         // corrected student ids
         val result = database.from(Answer)
-            .select(Answer.studentId)
+            .select(Answer.studentId,Answer.id)
             .where {
                 (Answer.id inList batchCorrectAnswerDTO.ids) and (Answer.corrected eq true)
             }
