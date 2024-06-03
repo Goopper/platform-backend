@@ -140,7 +140,7 @@ class TaskDAO(private val database: Database) {
                 (Task.id eq Answer.taskId)
                         and (Answer.studentId eq uid)
             )
-            .select()
+            .select(Task.id, Task.name, Task.content, Task.submitTypeId, Answer.corrected, Answer.score)
             .where {
                 (Task.id eq taskId)
             }
@@ -152,7 +152,8 @@ class TaskDAO(private val database: Database) {
                     status = it[Answer.corrected] != null,
                     score = it[Answer.score] ?: 0,
                     attachment = emptyList(),
-                    submitTypeId = it[Task.submitTypeId]!!
+                    submitTypeId = it[Task.submitTypeId]!!,
+                    corrected = it[Answer.corrected]!!
                 )
             }
             .firstOrNull() ?: throw Exception("Task not found")
