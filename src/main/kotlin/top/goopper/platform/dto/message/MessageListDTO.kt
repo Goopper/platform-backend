@@ -10,5 +10,6 @@ data class MessageListDTO(
     val typeId: Int,
     val sender: UserDTO,
     val date: LocalDateTime,
-    val isRead: Boolean
+    val isRead: Boolean,
+    val answerId: Int?
 )
