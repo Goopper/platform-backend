@@ -126,7 +126,7 @@ class TaskDAO(private val database: Database) {
                     status = false,
                     score = 0,
                     attachment = emptyList(),
-                    submitTypeId = it[Task.submitTypeId]!!
+                    submitTypeId = it[Task.submitTypeId]!!,
                 )
             }
             .firstOrNull() ?: throw Exception("Task not found")
@@ -153,7 +153,7 @@ class TaskDAO(private val database: Database) {
                     score = it[Answer.score] ?: 0,
                     attachment = emptyList(),
                     submitTypeId = it[Task.submitTypeId]!!,
-                    corrected = it[Answer.corrected]!!
+                    corrected = it[Answer.corrected]
                 )
             }
             .firstOrNull() ?: throw Exception("Task not found")

@@ -10,5 +10,5 @@ data class TaskDetailDTO(
     var score: Int,
     val submitTypeId: Int,
     var attachment: List<AttachmentDTO>,
-    val corrected: Boolean = false,
+    val corrected: Boolean? = null,
 )

@@ -10,8 +10,8 @@ import org.ktorm.schema.int
 object MessageAnswer : Table<Nothing>("message_answer") {
 
     val id = int("id").primaryKey()
-    val messageId = int("messageId")
-    val answerId = int("answerId")
+    val messageId = int("message_id")
+    val answerId = int("answer_id")
     val createTime = datetime("create_time")
 
 }
