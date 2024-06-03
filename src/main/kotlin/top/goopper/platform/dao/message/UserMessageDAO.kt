@@ -10,7 +10,6 @@ import top.goopper.platform.dto.message.MessageQueryDTO
 import top.goopper.platform.dto.message.UserMessageDTO
 import top.goopper.platform.table.User
 import top.goopper.platform.table.message.Message
-import top.goopper.platform.table.message.MessageAnswer
 import top.goopper.platform.table.message.UserMessage
 import java.time.LocalDateTime
 
@@ -32,11 +31,9 @@ class UserMessageDAO(private val database: Database) {
         val query = database.from(UserMessage)
             .leftJoin(User, User.id eq UserMessage.senderId)
             .innerJoin(Message, Message.id eq UserMessage.messageId)
-            .leftJoin(MessageAnswer, MessageAnswer.messageId eq UserMessage.messageId)
             .select(
                 UserMessage.id, Message.title, Message.content, Message.typeId, UserMessage.senderId, User.name,
                 User.avatar, User.email, User.sex, User.number, UserMessage.createTime, UserMessage.readTime,
-                MessageAnswer.answerId
             )
             .where {
                 (UserMessage.receiverId eq uid) and
@@ -65,7 +62,7 @@ class UserMessageDAO(private val database: Database) {
                 ),
                 date = it[UserMessage.createTime]!!,
                 isRead = it[UserMessage.readTime] != null,
-                answerId = it[MessageAnswer.answerId]
+                answerId = it[UserMessage.answerId]
             )
         }
         val total = query.totalRecordsInAllPages
@@ -94,6 +91,7 @@ class UserMessageDAO(private val database: Database) {
                     set(it.senderId, dto.senderId)
                     set(it.receiverId, dto.receiverId)
                     set(it.messageId, dto.messageId)
+                    set(it.answerId, dto.answerId)
                 }
             }
         }

@@ -14,6 +14,7 @@ open class UserMessage(alias: String?) : Table<Nothing>("user_message", alias) {
     val messageId = int("message_id")
     val readTime = datetime("read_time")
     val createTime = datetime("create_time")
+    val answerId = int("answer_id")
 
     override fun aliased(alias: String) = UserMessage(alias)
 }

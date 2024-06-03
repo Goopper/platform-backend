@@ -70,4 +70,40 @@ class MessageService(
         userMessageDAO.batchCreateUserMessage(dtoList)
     }
 
+    @Transactional(rollbackFor = [Exception::class])
+    fun sendForCorrect(message: MessageDTO, answerId: Int): Int {
+        val messageCreateDTO = MessageCreateDTO(
+            title = message.title,
+            content = message.content,
+            typeId = message.typeId,
+        )
+        val messageId = messageDAO.createMessage(messageCreateDTO)
+        val dto = UserMessageDTO(
+            senderId = message.senderId,
+            receiverId = message.receiverId,
+            messageId = messageId,
+            answerId = answerId,
+        )
+        return userMessageDAO.createUserMessage(dto)
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun batchSendForBatchCorrect(message: MessageBatchSendDTO, correctResult: Map<Int, Int>) {
+        val messageCreateDTO = MessageCreateDTO(
+            title = message.title,
+            content = message.content,
+            typeId = message.typeId,
+        )
+        val messageId = messageDAO.createMessage(messageCreateDTO)
+        val dtoList = correctResult.map {
+            UserMessageDTO(
+                senderId = message.senderId,
+                receiverId = it.value,
+                messageId = messageId,
+                answerId = it.key,
+            )
+        }
+        userMessageDAO.batchCreateUserMessage(dtoList)
+    }
+
 }

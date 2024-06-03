@@ -181,7 +181,7 @@ class AnswerDAO(
         submitTime = it[Answer.createTime]!!
     )
 
-    fun correctTasks(batchCorrectAnswerDTO: BatchCorrectAnswerDTO, teacherId: Int): List<Int> {
+    fun correctTasks(batchCorrectAnswerDTO: BatchCorrectAnswerDTO, teacherId: Int): Map<Int, Int> {
         database.update(Answer) {
             set(it.comment, batchCorrectAnswerDTO.comment)
             set(it.score, batchCorrectAnswerDTO.score)
@@ -193,13 +193,15 @@ class AnswerDAO(
         }
 
         // corrected student ids
-        val studentIds = database.from(Answer)
+        val result = database.from(Answer)
             .select(Answer.studentId)
             .where {
                 (Answer.id inList batchCorrectAnswerDTO.ids) and (Answer.corrected eq true)
             }
-            .map { it[Answer.studentId]!! }
-        return studentIds
+            .associate {
+                it[Answer.id]!! to it[Answer.studentId]!!
+            }
+        return result
     }
 
     fun getCorrectedAnswer(id: Int): CorrectedAnswerDetailDTO {
