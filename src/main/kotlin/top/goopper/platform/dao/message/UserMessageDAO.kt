@@ -35,6 +35,7 @@ class UserMessageDAO(private val database: Database) {
             .select(
                 UserMessage.id, Message.title, Message.content, Message.typeId, UserMessage.senderId, User.name,
                 User.avatar, User.email, User.sex, User.number, UserMessage.createTime, UserMessage.readTime,
+                UserMessage.answerId
             )
             .where {
                 (UserMessage.receiverId eq uid) and
