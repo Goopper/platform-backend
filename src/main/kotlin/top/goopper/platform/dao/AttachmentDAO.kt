@@ -33,7 +33,7 @@ class AttachmentDAO(private val database: Database) {
         }
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun deleteAttachmentByName(filename: String) {
         val count = database.delete(Attachment) {
             it.filename eq filename
@@ -47,7 +47,7 @@ class AttachmentDAO(private val database: Database) {
      * Delete all attachments that are not used in any course
      * @return the filename of the deleted attachments
      */
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun batchDeleteUnusedAttachment(): List<String>{
         val attachments = database.from(Attachment)
             .leftJoin(CourseAttachment, CourseAttachment.attachmentId eq Attachment.id)

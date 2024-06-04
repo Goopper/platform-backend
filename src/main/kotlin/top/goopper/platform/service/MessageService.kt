@@ -52,7 +52,7 @@ class MessageService(
     }
 
     // batch send messages
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun batchSend(message: MessageBatchSendDTO) {
         val messageCreateDTO = MessageCreateDTO(
             title = message.title,
@@ -70,7 +70,7 @@ class MessageService(
         userMessageDAO.batchCreateUserMessage(dtoList)
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun sendForCorrect(message: MessageDTO, answerId: Int): Int {
         val messageCreateDTO = MessageCreateDTO(
             title = message.title,
@@ -87,7 +87,7 @@ class MessageService(
         return userMessageDAO.createUserMessage(dto)
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun batchSendForBatchCorrect(message: MessageBatchSendDTO, correctResult: Map<Int, Int>) {
         val messageCreateDTO = MessageCreateDTO(
             title = message.title,

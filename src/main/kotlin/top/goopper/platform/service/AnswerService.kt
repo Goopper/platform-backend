@@ -133,7 +133,7 @@ class AnswerService(
         return answerDAO.getAnswerIdsAndTaskNames(answerIds)
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class], transactionManager = "basicTransactionManager")
     fun correctTasks(batchCorrectAnswerDTO: BatchCorrectAnswerDTO) {
         if (batchCorrectAnswerDTO.ids.isEmpty()) {
             return
