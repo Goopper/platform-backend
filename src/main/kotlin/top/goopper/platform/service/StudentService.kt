@@ -79,12 +79,17 @@ class StudentService(
             for (dto in result) {
                 val key = redisUtils.buildLatestLearnedKey(dto.id, courseId)
                 val status = it.hashCommands().hGetAll(key).orEmpty()
-
-                if (status.isNotEmpty()) {
-                    val iterator = status.iterator()
-                    dto.sectionName = String(iterator.next().value)
-                    dto.taskName = String(iterator.next().value)
-                    dto.lastUpdate = String(iterator.next().value)
+                if (status.isEmpty()) {
+                    continue
+                }
+                status.forEach { (k, v) ->
+                    val targetKey = String(k)
+                    val value = String(v)
+                    when (targetKey) {
+                        redisUtils.LATEST_LEARNED_SECTION_STR -> dto.sectionName = value
+                        redisUtils.LATEST_LEARNED_TASK_STR -> dto.taskName = value
+                        redisUtils.LATEST_LEARNED_DATE_STR -> dto.lastUpdate = value
+                    }
                 }
             }
         }
